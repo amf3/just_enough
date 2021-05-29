@@ -50,3 +50,21 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# Copied from buildroot's gitignore
+/output
+/dl
+/.auto.deps
+/.config.cmd
+/.config.old
+/..config.tmp
+/.config
+*.depend
+*.o
+/*.patch
+/*.diff
+*.orig
+*.rej
+*~
+*.pyc
+/build

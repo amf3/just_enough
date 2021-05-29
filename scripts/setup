@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Do we set ENV values here or in custom make file?
+
+git submodule update --remote
+mkdir build
