@@ -1,0 +1,29 @@
+name: Build Busybox
+on:
+  push:
+     branches: [ main ]
+     
+jobs:
+  build_and_run:
+     runs-on: ubuntu-latest
+     steps:
+     - name: Checkout REPO
+       uses: actions/checkout@v2
+       with:
+          submodules: recursive
+     - name: Build Busybox RootFS
+       run: |
+         export BR2_EXTERNAL=$PWD
+         make O=/tmp/build ./buildroot container_busybox_defconfig
+         make O=/tmp/build ./buildroot all
+         make O=/tmp/build ./buildroot external-deps  | egrep -v 'Entering directory|Leaving directory' | sort > /tmp/package-list 
+     - name: Upload RootFS
+       uses: actions/upload-artifact@v2
+       with:
+          name: busybox_rootfs.tar.gz
+          path: /tmp/build/images/rootfs.tar.gz
+     - name: Upload Package-List
+       uses: actions/upload-artifact@v2
+       with:
+          name: package-list
+          path: /tmp/package-list
