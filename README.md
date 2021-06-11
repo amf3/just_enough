@@ -15,9 +15,18 @@ Helper Scripts for stuff
 
 ## Getting Started
 
+TODO: git clone --recursive 
+TODO: source scripts/setup
+TODO: make ...
+
 git clone --recursive 
-source scripts/setup
-make ...
+cd just_enough
+export BR2_EXTERNAL=$PWD
+make O=$PWD ./buildroot list-defconfigs
+make O=$PWD ./buildroot container_base_defconfig
+time make O=$PWD ./buildroot all
+
+
 
 
 ## Contributing
@@ -53,11 +62,12 @@ make help               A very helpful help statement
 make O=mydir            Writes all output files into mydir including .config
 make list-defconfigs    Prints community defaults for HW boards like RPI or QEMU
 
-### Examples
-make O=$PWD -C ../buildroot qemu_x86_64_defconfig      Change to buildroot
-
 ### Important Variables
-export BR2_EXTERNAL=$PWD    Path to external tree absolute or relative
+export BR2_EXTERNAL=$PWD                                  Path to external tree absolute or relative path
+export BR2_DEFCONFIG=$PWD/configs/<boardname>_defconfig   Where defconfig file is saved. Recommend to point at configs dir
+
+### Examples
+make O=$PWD -C ./buildroot qemu_x86_64_defconfig      Change to buildroot for source, output files in $PWD
 
 ### External tree needs 3 files
 external.desc

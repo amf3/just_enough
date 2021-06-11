@@ -68,3 +68,9 @@ dkms.conf
 *~
 *.pyc
 /build
+/host
+Makefile
+.br2-external*
+/images
+/staging
+/target
