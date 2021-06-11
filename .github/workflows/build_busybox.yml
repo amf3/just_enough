@@ -13,7 +13,7 @@ jobs:
           submodules: recursive
      - name: Build Busybox RootFS
        run: |
-         export BR2_EXTERNAL=$PWD
+         export BR2_EXTERNAL=.
          make O=/tmp/build ./buildroot container_busybox_defconfig
          make O=/tmp/build ./buildroot all
          make O=/tmp/build ./buildroot external-deps  | egrep -v 'Entering directory|Leaving directory' | sort > /tmp/package-list 
