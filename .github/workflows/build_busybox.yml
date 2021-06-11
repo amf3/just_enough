@@ -4,13 +4,23 @@ on:
      branches: [ main ]
      
 jobs:
-  build_and_run:
+  build_busybox:
      runs-on: ubuntu-latest
      steps:
+     - name: set ENV
+       run: echo "NOW=$(date --rfc-3339=date)" >> "$GITHUB_ENV"
      - name: Checkout REPO
        uses: actions/checkout@v2
        with:
           submodules: recursive
+     - name: Cache Dependencies
+       uses: actions/cache@v2
+       id: busybox_buildroot_cache
+       with:
+         path: /tmp/build
+         key:  ${{ runner.os}}-make-${{ hashFiles('*build*') }}
+         restore-keys: |
+            ${{ runner.os }}-make
      - name: Build Busybox RootFS
        run: |
          export BR2_EXTERNAL=$GITHUB_WORKSPACE
@@ -20,10 +30,11 @@ jobs:
      - name: Upload RootFS
        uses: actions/upload-artifact@v2
        with:
-          name: busybox_rootfs.tar.gz
+          name: busybox_rootfs.${{ env.NOW }}.tgz
           path: /tmp/build/images/rootfs.tar.gz
      - name: Upload Package-List
        uses: actions/upload-artifact@v2
        with:
           name: package-list
           path: /tmp/package-list
+
