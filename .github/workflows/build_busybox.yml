@@ -13,7 +13,7 @@ jobs:
           submodules: recursive
      - name: Build Busybox RootFS
        run: |
-         export BR2_EXTERNAL=.
+         export BR2_EXTERNAL=$GITHUB_WORKSPACE
          make O=/tmp/build -C ./buildroot container_busybox_defconfig
          make O=/tmp/build -C ./buildroot all
          make O=/tmp/build -C ./buildroot external-deps  | egrep -v 'Entering directory|Leaving directory' | sort > /tmp/package-list 
