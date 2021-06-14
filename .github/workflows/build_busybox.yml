@@ -36,15 +36,20 @@ jobs:
          make O=/tmp/build -C ./buildroot all
          make O=/tmp/build -C ./buildroot external-deps  | egrep -v 'Entering directory|Leaving directory' | sort > /tmp/package-list 
 
-     - name: Upload RootFS
+     - name: Upload RootFS as Artifact
        uses: actions/upload-artifact@v2
        with:
           name: busybox_rootfs.${{ env.NOW }}.tgz
           path: /tmp/build/images/rootfs.tar.gz
 
-     - name: Upload Package-List
+     - name: Upload Package-List as Artifact
        uses: actions/upload-artifact@v2
        with:
           name: package-list
           path: /tmp/package-list
 
+     - name: Create Docker Image
+       run: docker import /tmp/build/images/rootfs.tar.gz busybox
+
+     - name: Push Docker Image
+     run: docker push ghcr.io/opsmekanix/buysbox:${{ env.NOW }}
