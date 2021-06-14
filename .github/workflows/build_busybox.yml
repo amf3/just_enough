@@ -52,4 +52,4 @@ jobs:
        run: docker import /tmp/build/images/rootfs.tar.gz busybox
 
      - name: Push Docker Image
-     run: docker push ghcr.io/opsmekanix/buysbox:${{ env.NOW }}
+       run: docker push ghcr.io/opsmekanix/buysbox:${{ env.NOW }}
