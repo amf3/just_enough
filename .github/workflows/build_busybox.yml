@@ -55,4 +55,4 @@ jobs:
          docker tag busybox ghcr.io/opsmekanix/buysbox:${{ env.NOW }}
 
      - name: Push Docker Image
-       run: docker push busybox ghcr.io/opsmekanix/buysbox:${{ env.NOW }}
+       run: docker push ghcr.io/opsmekanix/buysbox:${{ env.NOW }}
