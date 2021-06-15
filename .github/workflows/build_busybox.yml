@@ -50,7 +50,9 @@ jobs:
           path: /tmp/package-list
 
      - name: Create Docker Image
-       run: docker import /tmp/build/images/rootfs.tar.gz busybox
+       run: |
+         docker import /tmp/build/images/rootfs.tar.gz busybox
+         docker tag busybox ghcr.io/opsmekanix/buysbox:${{ env.NOW }}
 
      - name: Push Docker Image
        run: docker push busybox ghcr.io/opsmekanix/buysbox:${{ env.NOW }}
