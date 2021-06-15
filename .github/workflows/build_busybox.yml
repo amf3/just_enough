@@ -52,9 +52,9 @@ jobs:
      - name: Create Docker Image
        run: |
          docker import /tmp/build/images/rootfs.tar.gz busybox
-         docker tag busybox ghcr.io/opsmekanix/buysbox:${{ env.NOW }}
+         docker tag busybox ghcr.io/opsmekanix/just_enough_busybox:${{ env.NOW }}
 
      - name: Push Docker Image
        run: |
          echo ${{ secrets.GITHUB_TOKEN }}  | docker login ghcr.io -u opsmekanix --password-stdin
-         docker push ghcr.io/opsmekanix/buysbox:${{ env.NOW }}
+         docker push ghcr.io/opsmekanix/just_enough_busybox:${{ env.NOW }}
