@@ -4,7 +4,7 @@ on:
      branches: [ main ]
      
 jobs:
-  build_busybox:
+  build_openjdk11:
      runs-on: ubuntu-latest
      steps:
      - name: set ENV
@@ -32,7 +32,7 @@ jobs:
        if: steps.cache.outputs.cache-hit != 'true'
        run: make O=/tmp/build -C ./buildroot source
         
-     - name: Build Busybox RootFS
+     - name: Build OpenJDK11 RootFS
        run: |
          make O=/tmp/build -C ./buildroot all
          make O=/tmp/build -C ./buildroot external-deps  | egrep -v 'Entering directory|Leaving directory' | sort > /tmp/package-list 

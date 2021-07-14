@@ -30,12 +30,16 @@ time make O=$PWD ./buildroot all
 
 ## Downloads 
 
-[![just_enough_busybox](https://github.com/opsmekanix/just_enough/actions/workflows/build_busybox.yml/badge.svg?branch=main)](https://github.com/opsmekanix/just_enough/actions/workflows/build_busybox.yml)
+[![JustEnough BusyBox](https://github.com/opsmekanix/just_enough/actions/workflows/build_busybox.yml/badge.svg?branch=main)](https://github.com/opsmekanix/just_enough/actions/workflows/build_busybox.yml)
+[![JustEnough OpenJDK11](https://github.com/opsmekanix/just_enough/actions/workflows/build_openjdk11_bash.yml/badge.svg)](https://github.com/opsmekanix/just_enough/actions/workflows/build_openjdk11_bash.yml)
+[![JustEnough Bash With OpenJDK11](https://github.com/opsmekanix/just_enough/actions/workflows/build_openjdk11.yml/badge.svg)](https://github.com/opsmekanix/just_enough/actions/workflows/build_openjdk11.yml)
 
 
 ## Contributing
 
-stuff 
+1) Don't be a jerk
+2) Fork the Repository
+3) Make changes and submit a PR
 
 ## Resources 
 
@@ -79,8 +83,9 @@ external.mk
 Config.in
 
 ### TODO
-1) need to export BR2_EXTERNAL value
-2) Need to call make O=builddir so we don't pollute repo with temp files
-3) Capture `make external-deps` into release notes
-4) Tag containers with BuildRoot Relase/Version & allow for tag revisions
+1) Add Behavior Policy under contributions
+2) need to export BR2_EXTERNAL value
+3) Need to call make O=builddir so we don't pollute repo with temp files
+4) Capture `make external-deps` into release notes
+5) Tag containers with BuildRoot Relase/Version & allow for tag revisions
 
