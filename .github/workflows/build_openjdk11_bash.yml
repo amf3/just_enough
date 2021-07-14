@@ -51,7 +51,7 @@ jobs:
 
      - name: Create Docker Image
        run: |
-         docker import /tmp/build/images/rootfs.tar.gz bash_openjdk11
+         docker import /tmp/build/images/rootfs.tar.bz2 bash_openjdk11
          docker tag bash_openjdk11 ghcr.io/opsmekanix/just_enough_bash_openjdk11:${{ env.NOW }}
 
      - name: Push Docker Image
