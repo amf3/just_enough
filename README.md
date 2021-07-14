@@ -15,9 +15,11 @@ Helper Scripts for stuff
 
 ## Getting Started
 
-TODO: git clone --recursive 
+TODO: "git clone --recursive" or "git submodule update --remote"
 TODO: source scripts/setup
 TODO: make ...
+TODO: ABI considerations with glibc.  Want old kernel selection for glibc apps.  Might be able to fake older glibc via busybox config
+https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/unix/sysv/linux/dl-osinfo.h;h=fe46a2c9de16f7cca0196766051d0d0e375a4096;hb=HEAD#l44
 
 git clone --recursive 
 cd just_enough
@@ -26,7 +28,9 @@ make O=$PWD ./buildroot list-defconfigs
 make O=$PWD ./buildroot container_base_defconfig
 time make O=$PWD ./buildroot all
 
+## Downloads 
 
+[![just_enough_busybox](https://github.com/opsmekanix/just_enough/actions/workflows/build_busybox.yml/badge.svg?branch=main)](https://github.com/opsmekanix/just_enough/actions/workflows/build_busybox.yml)
 
 
 ## Contributing
@@ -78,4 +82,5 @@ Config.in
 1) need to export BR2_EXTERNAL value
 2) Need to call make O=builddir so we don't pollute repo with temp files
 3) Capture `make external-deps` into release notes
+4) Tag containers with BuildRoot Relase/Version & allow for tag revisions
 
