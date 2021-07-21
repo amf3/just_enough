@@ -1,0 +1,60 @@
+name: Build Python3
+on:
+  push:
+     branches: [ main ]
+     
+jobs:
+  build_python3:
+     runs-on: ubuntu-latest
+     steps:
+     - name: set ENV
+       run: | 
+         echo "NOW=$(date --rfc-3339=date)" >> "$GITHUB_ENV"
+         echo "BR2_EXTERNAL=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
+
+     - name: Checkout Submodule/BuildRoot REPO
+       uses: actions/checkout@v2
+       with:
+          submodules: recursive
+          fetch-depth: 0
+
+     - name: Cache Dependencies
+       uses: actions/cache@v2
+       id: buildroot_cache
+       with:
+         path: /tmp/build
+         key:  JustEnough-python3-cache-${{ hashFiles('/tmp/build/build/*') }}
+
+     - name: Load Menu config
+       run: make O=/tmp/build -C ./buildroot container_python3_defconfig
+
+     - name: Download Source
+       if: steps.cache.outputs.cache-hit != 'true'
+       run: make O=/tmp/build -C ./buildroot source
+        
+     - name: Build Python3 RootFS
+       run: |
+         make O=/tmp/build -C ./buildroot all
+         make O=/tmp/build -C ./buildroot external-deps  | egrep -v 'Entering directory|Leaving directory' | sort > /tmp/package-list 
+
+     - name: Upload RootFS as Artifact
+       uses: actions/upload-artifact@v2
+       with:
+          name: just_enough_python3_rootfs.${{ env.NOW }}.tar.bz2
+          path: /tmp/build/images/rootfs.tar.bz2
+
+     - name: Upload Package-List as Artifact
+       uses: actions/upload-artifact@v2
+       with:
+          name: just_enough_python3_package_list.txt
+          path: /tmp/package-list
+
+     - name: Create Docker Image
+       run: |
+         docker import /tmp/build/images/rootfs.tar.bz2 python3
+         docker tag openjdk11 ghcr.io/opsmekanix/just_enough_python3:${{ env.NOW }}
+
+     - name: Push Docker Image
+       run: |
+         echo ${{ secrets.GITHUB_TOKEN }}  | docker login ghcr.io -u opsmekanix --password-stdin
+         docker push ghcr.io/opsmekanix/just_enough_python3:${{ env.NOW }}
