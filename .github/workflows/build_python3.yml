@@ -52,7 +52,7 @@ jobs:
      - name: Create Docker Image
        run: |
          docker import /tmp/build/images/rootfs.tar.bz2 python3
-         docker tag openjdk11 ghcr.io/opsmekanix/just_enough_python3:${{ env.NOW }}
+         docker tag python3 ghcr.io/opsmekanix/just_enough_python3:${{ env.NOW }}
 
      - name: Push Docker Image
        run: |
