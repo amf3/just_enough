@@ -2,7 +2,7 @@
 
 This project contains Buildroot customizations for creating base container images.  You can find pre-built JustEnough containers at GitHub's Container Registry.
 
-##Table of Contents
+## Table of Contents
 
 * [About](#about)
 * [Pre-built container images](#prebbuilt-container-images)
@@ -74,23 +74,23 @@ export BR2_EXTERNAL=$PWD
 List container and load container definition
 
 ```
-make O=$PWD ./buildroot list-defconfigs
-make O=$PWD ./buildroot container_openjdk11_defconfig
+make O=$PWD -C ./buildroot list-defconfigs
+make O=$PWD -C ./buildroot container_openjdk11_defconfig
 ```
 
 Customize and save container changes.  Look for the packages menu inside menuconfig for 
 adding or removing packages.
 
 ```
-make O=$PWD ./buildroot menuconfig
-make O=$PWD ./buildroot savedefconfig
+make O=$PWD -C ./buildroot menuconfig
+make O=$PWD -C ./buildroot savedefconfig
 ```
 
 Build the container with "all" and list contents with "external-deps".
 
 ```
-time make O=$PWD ./buildroot all
-time make O=$PWD ./buildroot external-deps
+time make O=$PWD -C ./buildroot all
+time make O=$PWD -C ./buildroot external-deps
 ```
 
 Root file system will be found in the images directory which is turned into a container with "docker import".
