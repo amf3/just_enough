@@ -73,6 +73,12 @@ export BR2_EXTERNAL=$PWD
 
 List container and load container definition
 
+- BusyBox: [![JustEnough BusyBox](https://github.com/opsmekanix/just_enough/actions/workflows/build_busybox.yml/badge.svg?branch=main)](https://github.com/opsmekanix/just_enough/actions/workflows/build_busybox.yml)
+- OpenJDK with Bash [![JustEnough OpenJDK11](https://github.com/opsmekanix/just_enough/actions/workflows/build_openjdk11_bash.yml/badge.svg)](https://github.com/opsmekanix/just_enough/actions/workflows/build_openjdk11_bash.yml)
+- OpenJDK [![JustEnough Bash With OpenJDK11](https://github.com/opsmekanix/just_enough/actions/workflows/build_openjdk11.yml/badge.svg)](https://github.com/opsmekanix/just_enough/actions/workflows/build_openjdk11.yml)
+- Python3 with Bash [![Build Python3 With Bash](https://github.com/opsmekanix/just_enough/actions/workflows/build_python3_bash.yml/badge.svg)](https://github.com/opsmekanix/just_enough/actions/workflows/build_python3_bash.yml)
+- Python3 [![Build Python3](https://github.com/opsmekanix/just_enough/actions/workflows/build_python3.yml/badge.svg)](https://github.com/opsmekanix/just_enough/actions/workflows/build_python3.yml)
+
 ```
 make O=$PWD -C ./buildroot list-defconfigs
 make O=$PWD -C ./buildroot container_openjdk11_defconfig
