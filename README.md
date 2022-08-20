@@ -57,6 +57,7 @@ JustEnough container specifications
 
 Helper Scripts for customizing containers.
 
+
 ### .github/workflows
 
 Workflow definitions for building & distributing container images
@@ -73,11 +74,34 @@ export BR2_EXTERNAL=$PWD
 
 List container and load container definition
 
-- BusyBox: [![JustEnough BusyBox](https://github.com/opsmekanix/just_enough/actions/workflows/build_busybox.yml/badge.svg?branch=main)](https://github.com/opsmekanix/just_enough/actions/workflows/build_busybox.yml)
-- OpenJDK with Bash [![JustEnough OpenJDK11](https://github.com/opsmekanix/just_enough/actions/workflows/build_openjdk11_bash.yml/badge.svg)](https://github.com/opsmekanix/just_enough/actions/workflows/build_openjdk11_bash.yml)
-- OpenJDK [![JustEnough Bash With OpenJDK11](https://github.com/opsmekanix/just_enough/actions/workflows/build_openjdk11.yml/badge.svg)](https://github.com/opsmekanix/just_enough/actions/workflows/build_openjdk11.yml)
-- Python3 with Bash [![Build Python3 With Bash](https://github.com/opsmekanix/just_enough/actions/workflows/build_python3_bash.yml/badge.svg)](https://github.com/opsmekanix/just_enough/actions/workflows/build_python3_bash.yml)
-- Python3 [![Build Python3](https://github.com/opsmekanix/just_enough/actions/workflows/build_python3.yml/badge.svg)](https://github.com/opsmekanix/just_enough/actions/workflows/build_python3.yml)
+```
+make O=$PWD ./buildroot list-defconfigs
+make O=$PWD ./buildroot container_openjdk11_defconfig
+```
+
+Customize and save container changes.  Look for the packages menu inside menuconfig for 
+adding or removing packages.
+
+
+```
+make O=$PWD ./buildroot menuconfig
+make O=$PWD ./buildroot savedefconfig
+```
+
+Build the container with "all" and list contents with "external-deps".
+
+```
+time make O=$PWD ./buildroot all
+time make O=$PWD ./buildroot external-deps
+```
+
+Root file system will be found in the images directory which is turned into a container with "docker import".
+
+
+## Contributing
+
+1) Fork the Repository
+2) Make changes and submit a PR
 
 ```
 make O=$PWD -C ./buildroot list-defconfigs
