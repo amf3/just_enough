@@ -18,20 +18,23 @@ which software is inside the container image, which limits the size of the conta
 benifit is reducing the surface area for security issues.  If the latest CVE targets a common 
 command like sudo, and sudo doesn't exist within the container, there's no CVE for that container.
 
+The idea for this project came from a [2015 Sysdig & CoreOS presentation](https://www.youtube.com/watch?v=gMpldbcMHuI) 
+by [Brian Redbeard](https://github.com/brianredbeard).
+
 ## Prebuilt container images
 
 ### Build Status
 
-- [![JustEnough BusyBox](https://github.com/opsmekanix/just_enough/actions/workflows/build_busybox.yml/badge.svg?branch=main)](https://github.com/opsmekanix/just_enough/actions/workflows/build_busybox.yml)
-- [![JustEnough OpenJDK11](https://github.com/opsmekanix/just_enough/actions/workflows/build_openjdk11_bash.yml/badge.svg)](https://github.com/opsmekanix/just_enough/actions/workflows/build_openjdk11_bash.yml)
-- [![JustEnough Bash With OpenJDK11](https://github.com/opsmekanix/just_enough/actions/workflows/build_openjdk11.yml/badge.svg)](https://github.com/opsmekanix/just_enough/actions/workflows/build_openjdk11.yml)
-- [![JustEnough Python3](https://github.com/opsmekanix/just_enough/actions/workflows/build_python3.yml/badge.svg)](https://github.com/opsmekanix/just_enough/actions/workflows/build_python3.yml)
-- [![JustEnough Python3 With Bash](https://github.com/opsmekanix/just_enough/actions/workflows/build_python3_bash.yml/badge.svg)](https://github.com/opsmekanix/just_enough/actions/workflows/build_python3_bash.yml)
+- [![JustEnough BusyBox](https://github.com/amf3/just_enough/actions/workflows/build_busybox.yml/badge.svg?branch=main)](https://github.com/amf3/just_enough/actions/workflows/build_busybox.yml)
+- [![JustEnough OpenJDK11](https://github.com/amf3/just_enough/actions/workflows/build_openjdk11_bash.yml/badge.svg)](https://github.com/amf3/just_enough/actions/workflows/build_openjdk11_bash.yml)
+- [![JustEnough Bash With OpenJDK11](https://github.com/amf3/just_enough/actions/workflows/build_openjdk11.yml/badge.svg)](https://github.com/amf3/just_enough/actions/workflows/build_openjdk11.yml)
+- [![JustEnough Python3](https://github.com/amf3/just_enough/actions/workflows/build_python3.yml/badge.svg)](https://github.com/amf3/just_enough/actions/workflows/build_python3.yml)
+- [![JustEnough Python3 With Bash](https://github.com/amf3/just_enough/actions/workflows/build_python3_bash.yml/badge.svg)](https://github.com/amf3/just_enough/actions/workflows/build_python3_bash.yml)
 
 
 ### Downloads
 
-Prebuilt container images can be found in the [packages](https://github.com/opsmekanix?tab=packages&repo_name=just_enough) section of this project.  Click on the package name for the container you want to use.  There's a Github Container Registry link at the top of page.  Either "docker pull" or using "FROM ghcr.io/opsmekanix/..." in the Dockerfile will download the image.
+Prebuilt container images can be found in the [packages](https://github.com/amf3?tab=packages&repo_name=just_enough) section of this project.  Click on the package name for the container you want to use.  There's a Github Container Registry link at the top of page.  Either "docker pull" or using "FROM ghcr.io/amf3/..." in the Dockerfile will download the image.
 
 ### Container Image Tags
 
@@ -67,64 +70,36 @@ Workflow definitions for building & distributing container images
 Prepare the environment
 
 ```
-git clone --recursive 
-cd just_enough
-export BR2_EXTERNAL=$PWD
+$ git clone --recursive https://github.com/amf3/just_enough.git
+$ cd just_enough
+$ export BR2_EXTERNAL=$PWD  # presumes bash is the environment
 ```
 
-List container and load container definition
+List container and load container definition for openjdk11. Entries starting with `container_` are 
+part of this project.  (If you would like to customize the busybox container instead of Open JDK, then 
+load the busybox_defconfig.)
 
 ```
-make O=$PWD ./buildroot list-defconfigs
-make O=$PWD ./buildroot container_openjdk11_defconfig
+$ make O=$PWD -C ./buildroot list-defconfigs
+$ make O=$PWD -C ./buildroot container_openjdk11_defconfig
 ```
 
-Customize and save container changes.  Look for the packages menu inside menuconfig for 
-adding or removing packages.
-
-
-```
-make O=$PWD ./buildroot menuconfig
-make O=$PWD ./buildroot savedefconfig
-```
-
-Build the container with "all" and list contents with "external-deps".
-
-```
-time make O=$PWD ./buildroot all
-time make O=$PWD ./buildroot external-deps
-```
-
-Root file system will be found in the images directory which is turned into a container with "docker import".
-
-
-## Contributing
-
-1) Fork the Repository
-2) Make changes and submit a PR
-
-```
-make O=$PWD -C ./buildroot list-defconfigs
-make O=$PWD -C ./buildroot container_openjdk11_defconfig
-```
-
-Customize and save container changes.  Look for the packages menu inside menuconfig for 
+Customize and save container changes with menuconfig.  Look for the packages menu inside menuconfig for 
 adding or removing packages.
 
 ```
-make O=$PWD -C ./buildroot menuconfig
-make O=$PWD -C ./buildroot savedefconfig
+$ make O=$PWD -C ./buildroot menuconfig
+$ make O=$PWD -C ./buildroot savedefconfig
 ```
 
-Build the container with "all" and list contents with "external-deps".
+Build the container with "all" and list dependencies with "external-deps".
 
 ```
-time make O=$PWD -C ./buildroot all
-time make O=$PWD -C ./buildroot external-deps
+$ time make O=$PWD -C ./buildroot all
+$ time make O=$PWD -C ./buildroot external-deps
 ```
 
 Root file system will be found in the images directory which is turned into a container with "docker import".
-
 
 ## Contributing
 

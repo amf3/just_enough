@@ -1,7 +1,7 @@
 name: Build Busybox
 on:
   push:
-     branches: [ main ]
+     branches: [ foo_main ]
      
 jobs:
   build_busybox:
@@ -9,17 +9,20 @@ jobs:
      steps:
      - name: set ENV
        run: | 
-         echo "NOW=$(date --rfc-3339=date)" >> "$GITHUB_ENV"
+         echo "NOW=$(date --rfc-3339=seconds)" >> "$GITHUB_ENV"
+         echo "LATEST_TAG=$(cd buildroot && git tag -l  | egrep -v 'legacy|rc' | sort -n | tail -1)" >> "$GITHUB_ENV"
+         echo "BUILD_TAG="2021.02.3" >> "$GITHUB_ENV"
          echo "BR2_EXTERNAL=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
 
      - name: Checkout Submodule/BuildRoot REPO
-       uses: actions/checkout@v2
+       uses: actions/checkout@v3
        with:
           submodules: recursive
           fetch-depth: 0
+          ref: ${{ env.BUILD_TAG }}
 
      - name: Cache Dependencies
-       uses: actions/cache@v2
+       uses: actions/cache@v3
        id: buildroot_cache
        with:
          path: /tmp/build
@@ -38,23 +41,23 @@ jobs:
          make O=/tmp/build -C ./buildroot external-deps  | egrep -v 'Entering directory|Leaving directory' | sort > /tmp/package-list 
 
      - name: Upload RootFS as Artifact
-       uses: actions/upload-artifact@v2
+       uses: actions/upload-artifact@v3
        with:
-          name: just_enough_busybox_rootfs.${{ env.NOW }}.tgz
+          name: just_enough_busybox_rootfs_${{ env.BUILD_TAG }}.${{ env.NOW }}.tgz
           path: /tmp/build/images/rootfs.tar.gz
 
      - name: Upload Package-List as Artifact
-       uses: actions/upload-artifact@v2
+       uses: actions/upload-artifact@v3
        with:
-          name: just_enough_busybox_package_list.txt
+          name: just_enough_busybox_package_list_${{ env.BUILD_TAG }}.${{ env.NOW }}.txt
           path: /tmp/package-list
 
      - name: Create Docker Image
        run: |
          docker import /tmp/build/images/rootfs.tar.gz busybox
-         docker tag busybox ghcr.io/opsmekanix/just_enough_busybox:${{ env.NOW }}
+         docker tag busybox ghcr.io/amf3/just_enough_busybox_${{ env.BUILD_TAG }}:${{ env.NOW }}
 
      - name: Push Docker Image
        run: |
-         echo ${{ secrets.GITHUB_TOKEN }}  | docker login ghcr.io -u opsmekanix --password-stdin
-         docker push ghcr.io/opsmekanix/just_enough_busybox:${{ env.NOW }}
+         echo ${{ secrets.GITHUB_TOKEN }}  | docker login ghcr.io -u amf3 --password-stdin
+         docker push ghcr.io/amf3/just_enough_busybox_${{ env.BUILD_TAG }}:${{ env.NOW }}
