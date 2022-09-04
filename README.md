@@ -95,7 +95,7 @@ $ make O=$PWD -C ./buildroot savedefconfig
 Build the container with "all" and list dependencies with "external-deps".
 
 ```
-$ time make O=$PWD -C ./buildroot all
+$ time make O=$PWD -C ./buildroot source all
 $ time make O=$PWD -C ./buildroot external-deps
 ```
 
