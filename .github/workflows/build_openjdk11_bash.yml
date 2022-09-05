@@ -19,7 +19,6 @@ jobs:
        with:
           submodules: recursive
           fetch-depth: 0
-          ref: ${{ env.BUILD_TAG }}
 
      - name: Load Menu config
        run: make O=/tmp/build -C ./buildroot container_bash_openjdk11_defconfig
