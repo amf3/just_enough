@@ -1,7 +1,7 @@
 name: Build OpenJDK11
 on:
   push:
-     branches: [ foo_main ]
+     branches: [ main ]
      
 jobs:
   build_bash_openjdk11:
@@ -11,7 +11,7 @@ jobs:
        run: | 
          echo "NOW=$(date --rfc-3339=seconds)" >> "$GITHUB_ENV"
          echo "LATEST_TAG=$(cd buildroot && git tag -l  | egrep -v 'legacy|rc' | sort -n | tail -1)" >> "$GITHUB_ENV"
-         echo "BUILD_TAG="2021.02.3" >> "$GITHUB_ENV"
+         echo "BUILD_TAG="2022.05.2" >> "$GITHUB_ENV"
          echo "BR2_EXTERNAL=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
 
      - name: Checkout Submodule/BuildRoot REPO
@@ -21,43 +21,32 @@ jobs:
           fetch-depth: 0
           ref: ${{ env.BUILD_TAG }}
 
-     - name: Cache Dependencies
-       uses: actions/cache@v3
-       id: buildroot_cache
-       with:
-         path: /tmp/build
-         key:  JustEnough-bash-openjdk11-cache-${{ hashFiles('/tmp/build/build/*') }}
-
      - name: Load Menu config
        run: make O=/tmp/build -C ./buildroot container_bash_openjdk11_defconfig
 
-     - name: Download Source
-       if: steps.cache.outputs.cache-hit != 'true'
-       run: make O=/tmp/build -C ./buildroot source
-        
      - name: Build Bash OpenJDK11 RootFS
        run: |
-         make O=/tmp/build -C ./buildroot all
+         make O=/tmp/build -C ./buildroot source all
          make O=/tmp/build -C ./buildroot external-deps  | egrep -v 'Entering directory|Leaving directory' | sort > /tmp/package-list 
 
      - name: Upload RootFS as Artifact
        uses: actions/upload-artifact@v3
        with:
-          name: just_enough_bash_openjdk11_${{ env.BUILD_TAG }}.${{ env.NOW }}.tar.bz2
+          name: just_enough_openjdk11_bash_${{ env.BUILD_TAG }}.${{ env.NOW }}.tar.bz2
           path: /tmp/build/images/rootfs.tar.bz2
 
      - name: Upload Package-List as Artifact
        uses: actions/upload-artifact@v3
        with:
-          name: just_enough_bash_openjdk_package_list_${{ env.BUILD_TAG }}.${{ env.NOW }}.txt
+          name: just_enough_openjdk_bash_package_list_${{ env.BUILD_TAG }}.${{ env.NOW }}.txt
           path: /tmp/package-list
 
      - name: Create Docker Image
        run: |
-         docker import /tmp/build/images/rootfs.tar.bz2 bash_openjdk11
-         docker tag bash_openjdk11 ghcr.io/amf3/just_enough_bash_openjdk11${{ env.BUILD_TAG }}:${{ env.NOW }}
+         docker import /tmp/build/images/rootfs.tar.bz2 openjdk11_bash
+         docker tag bash_openjdk11 ghcr.io/amf3/just_enough_openjdk11_bash_${{ env.BUILD_TAG }}:${{ env.NOW }}
 
      - name: Push Docker Image
        run: |
          echo ${{ secrets.GITHUB_TOKEN }}  | docker login ghcr.io -u amf3 --password-stdin
-         docker push ghcr.io/amf3/just_enough_bash_openjdk11_${{ env.BUILD_TAG }}:${{ env.NOW }}
+         docker push ghcr.io/amf3/just_enough_openjdk11_bash_${{ env.BUILD_TAG }}:${{ env.NOW }}

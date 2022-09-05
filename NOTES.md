@@ -55,7 +55,11 @@ Config.in
 ### TODO
 1) Add Behavior Policy under contributions
 2) need to export BR2_EXTERNAL value
-3) Need to call make O=builddir so we don't pollute repo with temp files
+3) ~~Need to call make O=builddir so we don't pollute repo with temp files~~ Done
 4) Capture `make external-deps` into release notes
 5) Tag containers with BuildRoot Relase/Version & allow for tag revisions
+    a) Need to allow for more then 1 container build per day.
+    b) Use 'latest' tag to point at shiney new.
+    c) how can I push these to dockerhub ?
+
 
