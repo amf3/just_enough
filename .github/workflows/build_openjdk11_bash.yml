@@ -9,7 +9,7 @@ jobs:
      steps:
      - name: set ENV
        run: | 
-         echo "NOW=$(date --rfc-3339=seconds)" >> "$GITHUB_ENV"
+         echo "NOW=$(date +%s)" >> "$GITHUB_ENV"
          echo "LATEST_TAG=$(cd buildroot && git tag -l  | egrep -v 'legacy|rc' | sort -n | tail -1)" >> "$GITHUB_ENV"
          echo "BUILD_TAG=2022.05.2" >> "$GITHUB_ENV"
          echo "BR2_EXTERNAL=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
