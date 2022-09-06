@@ -37,15 +37,18 @@ jobs:
      - name: Upload Package-List as Artifact
        uses: actions/upload-artifact@v3
        with:
-          name: just_enough_openjdk_bash_package_list_${{ env.BUILD_TAG }}.${{ env.NOW }}.txt
+          name: just_enough_openjdk11_bash_package_list_${{ env.BUILD_TAG }}.${{ env.NOW }}.txt
           path: /tmp/package-list
 
      - name: Create Docker Image
        run: |
          docker import /tmp/build/images/rootfs.tar.bz2 openjdk11_bash
-         docker tag bash_openjdk11 ghcr.io/amf3/just_enough_openjdk11_bash_${{ env.BUILD_TAG }}:${{ env.NOW }}
+         docker tag openjdk11_bash ghcr.io/amf3/just_enough_openjdk11_bash:${{ env.BUILD_TAG }}_${{ env.NOW }}
+         docker tag openjdk11_bash ghcr.io/amf3/just_enough_openjdk11_bash:latest
+
 
      - name: Push Docker Image
        run: |
          echo ${{ secrets.GITHUB_TOKEN }}  | docker login ghcr.io -u amf3 --password-stdin
-         docker push ghcr.io/amf3/just_enough_openjdk11_bash_${{ env.BUILD_TAG }}:${{ env.NOW }}
+         docker push ghcr.io/amf3/just_enough_openjdk11_bash:${{ env.BUILD_TAG }}_${{ env.NOW }}
+         docker push ghcr.io/amf3/just_enough_openjdk11_bash:latest

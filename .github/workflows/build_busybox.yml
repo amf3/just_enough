@@ -43,9 +43,11 @@ jobs:
      - name: Create Docker Image
        run: |
          docker import /tmp/build/images/rootfs.tar.gz busybox
-         docker tag busybox ghcr.io/amf3/just_enough_busybox_${{ env.BUILD_TAG }}:${{ env.NOW }}
+         docker tag busybox ghcr.io/amf3/just_enough_busybox:${{ env.BUILD_TAG }}_${{ env.NOW }}
+         docker tag busybox ghcr.io/amf3/just_enough_busybox:latest}
 
      - name: Push Docker Image
        run: |
          echo ${{ secrets.GITHUB_TOKEN }}  | docker login ghcr.io -u amf3 --password-stdin
-         docker push ghcr.io/amf3/just_enough_busybox_${{ env.BUILD_TAG }}:${{ env.NOW }}
+         docker push ghcr.io/amf3/just_enough_busybox:${{ env.BUILD_TAG }}_${{ env.NOW }}
+         docker push ghcr.io/amf3/just_enough_busybox:latest

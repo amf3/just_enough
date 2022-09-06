@@ -43,9 +43,12 @@ jobs:
      - name: Create Docker Image
        run: |
          docker import /tmp/build/images/rootfs.tar.bz2 openjdk11
-         docker tag openjdk11 ghcr.io/amf3/just_enough_openjdk11_${{ env.BUILD_TAG }}:${{ env.NOW }}
+         docker tag openjdk11 ghcr.io/amf3/just_enough_openjdk11:${{ env.BUILD_TAG }}_${{ env.NOW }}
+         docker tag openjdk11 ghcr.io/amf3/just_enough_openjdk11:latest
+
 
      - name: Push Docker Image
        run: |
          echo ${{ secrets.GITHUB_TOKEN }}  | docker login ghcr.io -u amf3 --password-stdin
-         docker push ghcr.io/amf3/just_enough_openjdk11_${{ env.BUILD_TAG }}:${{ env.NOW }}
+         docker push ghcr.io/amf3/just_enough_openjdk11:${{ env.BUILD_TAG }}_${{ env.NOW }}
+         docker push ghcr.io/amf3/just_enough_openjdk11:latest
