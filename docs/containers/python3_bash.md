@@ -41,7 +41,7 @@ pip install shiv && \
 mkdir /tmp/artifacts && \
 shiv -c flask -o /tmp/artifacts/flask -p /usr/bin/python3 flask 
 
-FROM just_enough_python3
+FROM ghcr.io/amf3/just_enough_python3:latest
 USER appuser
 COPY --from=0 /tmp/artifacts/flask /tmp/flask
 COPY hello.py /tmp/hello.py

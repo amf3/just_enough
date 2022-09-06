@@ -31,14 +31,24 @@ by [Brian Redbeard](https://github.com/brianredbeard).
 - [![JustEnough Python3](https://github.com/amf3/just_enough/actions/workflows/build_python3.yml/badge.svg)](https://github.com/amf3/just_enough/actions/workflows/build_python3.yml)
 - [![JustEnough Python3 With Bash](https://github.com/amf3/just_enough/actions/workflows/build_python3_bash.yml/badge.svg)](https://github.com/amf3/just_enough/actions/workflows/build_python3_bash.yml)
 
+### Container Image Tags
+
+Container tags using the buildroot release version followed by the epoch time when the image was built.  Latest will 
+always point to the latest built image, regardless of the buildroot release.
 
 ### Downloads
 
 Prebuilt container images can be found in the [packages](https://github.com/amf3?tab=packages&repo_name=just_enough) section of this project.  Click on the package name for the container you want to use.  There's a Github Container Registry link at the top of page.  Either "docker pull" or using "FROM ghcr.io/amf3/..." in the Dockerfile will download the image.
 
-### Container Image Tags
+The following images are currently offered.
 
-Currently container tags are based on the build date in year-month-day format.  There is no "latest" tag.  Future plans will change the tag name from using the build date to using the buildroot release tag.  This will provide a means of mapping a container to release of buildroot.
+| Image Name | Image documentation | Docker or Podman pull |  Dockerfile |
+| ---------- | ------ | --------------------- |  ---------- |
+| [just_enough_busybox](https://github.com/users/amf3/packages/container/package/just_enough_busybox) | [BusyBox](https://github.com/amf3/just_enough/blob/main/docs/containers/busybox.md) | docker pull ghcr.io/amf3/just_enough_busybox:latest | FROM ghcr.io/amf3/just_enough_busybox:latest |
+| [just_enough_openjdk11](https://github.com/users/amf3/packages/container/package/just_enough_openjdk11) | [OpenJDK11](https://github.com/amf3/just_enough/blob/main/docs/containers/openjdk.md) | docker pull ghcr.io/amf3/just_enough_openjdk11:latest | FROM ghcr.io/amf3/just_enough_openjdk11:latest |
+| [just_enough_openjdk11_bash](https://github.com/users/amf3/packages/container/package/just_enough_openjdk11_bash) | [OpenJDK11_Bash](https://github.com/amf3/just_enough/blob/main/docs/containers/openjdk11_bash.md) | docker pull ghcr.io/amf3/just_enough_openjdk11_bash:latest | FROM ghcr.io/amf3/just_enough_openjdk11_bash:latest |
+| [just_enough_python3](https://github.com/users/amf3/packages/container/package/just_enough_python3) | [Python3](https://github.com/amf3/just_enough/blob/main/docs/containers/python3.md) | docker pull ghcr.io/amf3/just_enough_python3:latest | FROM ghcr.io/amf3/just_enough_python3:latest |
+| [just_enough_python3_bash](https://github.com/users/amf3/packages/container/package/just_enough_python3_bash) | [Python3_Bash](https://github.com/amf3/just_enough/blob/main/docs/containers/python3_bash.md) | docker pull ghcr.io/amf3/just_enough_python3_bash:latest | FROM ghcr.io/amf3/just_enough_python3_bash:latest |
 
 ### Container Image Manifest
 
