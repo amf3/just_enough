@@ -1,0 +1,31 @@
+---
+bin:
+    path: "/bin"
+    permission: 0777
+    linkTo: "/usr/bin"
+    category: "symbolic_link"
+dev:
+    path: "/dev"
+    permission: 0755
+    linkTo: ""
+    category: "directory"
+etc:
+    path: "/etc"
+    permission: 0755
+    linkTo: ""
+    category: "directory"
+etc_passwd:
+    path: "/etc/passwd"
+    permissions: 0644
+    source: "../configs/passwd"
+    category: "file"
+etc_group:
+    path: "/etc/group"
+    permissions: 0644
+    source: "../configs/group"
+    category: "file"
+etc_shadow:
+    path: "/etc/shadow"
+    permissions: 0000
+    source: "../configs/shadow"
+    category: "file"

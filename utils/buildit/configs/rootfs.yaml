@@ -1,0 +1,61 @@
+---
+directories:
+  dev: 
+    path: "/dev"
+    permission: 0755
+  etc: 
+    path: "/etc"
+    permission: 0755
+  media: 
+    path: "/media"
+    permission: 0755
+  mnt: 
+    path: "/mnt"
+    permission: 0755
+  opt: 
+    path: "/opt"
+    permission: 0755
+  root: 
+    path: "/root"
+    permsision: 0700
+  run: 
+    path: "/run"
+    permission: 0755
+  srv: 
+    path: "/srv"
+    permission: 0755
+  tmp: 
+    path: "/tmp"
+    permission: 01777
+  var: 
+    path: "/var"
+    permission: 0755
+  usr: 
+    path: "/usr"
+    permission: 0755
+  usr_bin: 
+    path: "/usr/bin"
+    pemission: 0755
+  usr_lib: 
+    path: "/usr/lib"
+    permission: 0755
+  usr_local: 
+    path: "/usr/local"
+    permission: 0755
+  usr_sbin: 
+    path: "/usr/sbin"
+    permission: 0755
+
+symlinks:
+  bin: 
+    linkFrom: "/bin"
+    linkTo: "/usr/bin"
+  sbin:
+    linkFrom: "/sbin"
+    linkTo: "/usr/sbin"
+  lib: 
+    linkFrom: "/lib"
+    linkTo: "/usr/lib"
+  lib64: 
+    linkFrom: "/lib64"
+    linkTo: "/usr/lib"

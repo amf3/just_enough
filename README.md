@@ -19,7 +19,8 @@ benifit is reducing the surface area for security issues.  If the latest CVE tar
 command like sudo, and sudo doesn't exist within the container, there's no CVE for that container.
 
 The idea for this project came from a [2015 Sysdig & CoreOS presentation](https://www.youtube.com/watch?v=gMpldbcMHuI) 
-by [Brian Redbeard](https://github.com/brianredbeard).
+by [Brian Redbeard](https://github.com/brianredbeard).  If you don't have time to watch the video, it demonstrates that a container image is a root filesystem that gets combined with a container runtime like cri-o or containerd.  Buildroot is
+used to create a minima root filesystem.  The rootfilesystem is combined with containerd and exported to a registry server.
 
 ## Prebuilt container images
 
@@ -66,9 +67,9 @@ Better accessibility to the manifest is planned.
 
 JustEnough container specifications
 
-### scripts
+### utils
 
-Helper Scripts for customizing containers.
+Helper programs for customizing containers.
 
 
 ### .github/workflows

@@ -1,3 +1,13 @@
+## Finding linked libraries
+From `man ldd`
+```
+bash-5.1# objdump -p /usr/lib/jvm/bin/java | grep NEEDED 
+  NEEDED               libz.so.1
+  NEEDED               libjli.so
+  NEEDED               libc.so.6
+bash-5.1# find /usr -name libjli.so 
+/usr/lib/jvm/lib/jli/libjli.so
+```
 
 ## Getting Started
 
@@ -13,7 +23,6 @@ export BR2_EXTERNAL=$PWD
 make O=$PWD ./buildroot list-defconfigs
 make O=$PWD ./buildroot container_base_defconfig
 time make O=$PWD ./buildroot all
-
 
 ## Notes (remove/cleanup later)
 
@@ -55,7 +64,7 @@ Config.in
 ### TODO
 1) Add Behavior Policy under contributions
 2) need to export BR2_EXTERNAL value
-3) ~~Need to call make O=builddir so we don't pollute repo with temp files~~ Done
+3) ~~Need to call make O=builddir so we don't pollute repo with temp files~~ [Complete]
 4) Capture `make external-deps` into release notes
 5) Tag containers with BuildRoot Relase/Version & allow for tag revisions
     a) Need to allow for more then 1 container build per day.
