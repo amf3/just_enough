@@ -2,6 +2,7 @@
 ## Getting Started
 
 TODO: "git clone --recursive" or "git submodule update --remote"
+TODO: "git checkout tags/2022.08.1 -b 2022.08.01"
 TODO: source scripts/setup
 TODO: make ...
 TODO: ABI considerations with glibc.  Want old kernel selection for glibc apps.  Might be able to fake older glibc via busybox config
@@ -51,6 +52,14 @@ make O=$PWD -C ./buildroot qemu_x86_64_defconfig      Change to buildroot for so
 external.desc
 external.mk
 Config.in
+
+### QEMU
+
+Use the following when starting the ISO image with qemu
+
+```
+qemu-system-x86_64 -cdrom output/images/rootfs.iso9660 -nographic -M pc -m 1G -smp 1 -net nic,model=virtio -net user 
+```
 
 ### TODO
 1) Add Behavior Policy under contributions
