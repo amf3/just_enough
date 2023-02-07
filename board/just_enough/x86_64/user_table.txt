@@ -1,0 +1,1 @@
+appuser 9001 appuser 9001 !=login_disabled /home/appuser /bin/false appuser Headless account to run applications
