@@ -18,6 +18,12 @@ time make O=$PWD ./buildroot all
 
 ## Notes (remove/cleanup later)
 
+
+### caching
+
+export BR2_DL_DIR=~/.buildroot-dl   # will cache downloads 
+compiler cache stuff CCACHE under build options in the menu
+
 ### menuconfigs
 make menuconfig
 make linux-menuconfig

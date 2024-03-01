@@ -26,8 +26,8 @@ by [Brian Redbeard](https://github.com/brianredbeard).
 ### Build Status
 
 - [![JustEnough BusyBox](https://github.com/amf3/just_enough/actions/workflows/build_busybox.yml/badge.svg?branch=main)](https://github.com/amf3/just_enough/actions/workflows/build_busybox.yml)
-- [![JustEnough OpenJDK11](https://github.com/amf3/just_enough/actions/workflows/build_openjdk11_bash.yml/badge.svg)](https://github.com/amf3/just_enough/actions/workflows/build_openjdk11_bash.yml)
-- [![JustEnough Bash With OpenJDK11](https://github.com/amf3/just_enough/actions/workflows/build_openjdk11.yml/badge.svg)](https://github.com/amf3/just_enough/actions/workflows/build_openjdk11.yml)
+- [![JustEnough OpenJDK17](https://github.com/amf3/just_enough/actions/workflows/build_openjdk17_bash.yml/badge.svg)](https://github.com/amf3/just_enough/actions/workflows/build_openjdk17_bash.yml)
+- [![JustEnough Bash With OpenJDK11](https://github.com/amf3/just_enough/actions/workflows/build_openjdk17.yml/badge.svg)](https://github.com/amf3/just_enough/actions/workflows/build_openjdk17.yml)
 - [![JustEnough Python3](https://github.com/amf3/just_enough/actions/workflows/build_python3.yml/badge.svg)](https://github.com/amf3/just_enough/actions/workflows/build_python3.yml)
 - [![JustEnough Python3 With Bash](https://github.com/amf3/just_enough/actions/workflows/build_python3_bash.yml/badge.svg)](https://github.com/amf3/just_enough/actions/workflows/build_python3_bash.yml)
 
@@ -80,9 +80,11 @@ Workflow definitions for building & distributing container images
 Prepare the environment
 
 ```
+$ mkdir $HOME/.buildroot-dl
 $ git clone --recursive https://github.com/amf3/just_enough.git
 $ cd just_enough
-$ export BR2_EXTERNAL=$PWD  # presumes bash is the environment
+$ export BR2_EXTERNAL=$PWD                # presumes bash is the environment
+$ export BR2_DL_DIR=$HOME/.buildroot-dl 
 ```
 
 List container and load container definition for openjdk11. Entries starting with `container_` are 
