@@ -80,9 +80,11 @@ Workflow definitions for building & distributing container images
 Prepare the environment
 
 ```
+$ mkdir $HOME/.buildroot-dl
 $ git clone --recursive https://github.com/amf3/just_enough.git
 $ cd just_enough
-$ export BR2_EXTERNAL=$PWD  # presumes bash is the environment
+$ export BR2_EXTERNAL=$PWD                # presumes bash is the environment
+$ export BR2_DL_DIR=$HOME/.buildroot-dl 
 ```
 
 List container and load container definition for openjdk11. Entries starting with `container_` are 
