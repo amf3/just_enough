@@ -1,3 +1,6 @@
+# Artifacts to ignore
+buildroot-package-cache
+
 # Prerequisites
 *.d
 
