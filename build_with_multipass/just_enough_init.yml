@@ -1,0 +1,33 @@
+#cloud-config
+
+# Update the list of packages available online
+package_update: true
+# Upgrade all installed packages
+package_upgrade: true
+
+# Install docker & other utilities
+packages:
+  - build-essential
+  - libncurses-dev
+  - file
+  - wget
+  - cpio
+  - unzip
+  - rsync
+  - bc
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg-agent
+  - software-properties-common
+  - btop
+  - jq
+
+write_files:
+- path: /etc/profile.d/10_buildroot_env.sh
+  content: |
+    export BR2_EXTERNAL=$HOME/just_enough
+    export BR2_DL_DIR=$HOME/just_enough/buildroot-package-cache
+  permissions: '0644'
+  owner: 'root:root'
+  defer: true
