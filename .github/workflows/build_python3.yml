@@ -11,11 +11,11 @@ jobs:
        run: | 
          echo "NOW=$(date +%s)" >> "$GITHUB_ENV"
          echo "LATEST_TAG=$(cd buildroot && git tag -l  | egrep -v 'legacy|rc' | sort -n | tail -1)" >> "$GITHUB_ENV"
-         echo "BUILD_TAG=2022.05.2" >> "$GITHUB_ENV"
+         echo "BUILD_TAG=2023.02.9" >> "$GITHUB_ENV"
          echo "BR2_EXTERNAL=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
 
      - name: Checkout Submodule/BuildRoot REPO
-       uses: actions/checkout@v3
+       uses: actions/checkout@v4
        with:
           submodules: recursive
           fetch-depth: 0
@@ -29,13 +29,13 @@ jobs:
          make O=/tmp/build -C ./buildroot external-deps  | egrep -v 'Entering directory|Leaving directory' | sort > /tmp/package-list 
 
      - name: Upload RootFS as Artifact
-       uses: actions/upload-artifact@v3
+       uses: actions/upload-artifact@v4
        with:
           name: just_enough_python3_rootfs_${{ env.BUILD_TAG }}.${{ env.NOW }}.tar.bz2
           path: /tmp/build/images/rootfs.tar.bz2
 
      - name: Upload Package-List as Artifact
-       uses: actions/upload-artifact@v3
+       uses: actions/upload-artifact@v4
        with:
           name: just_enough_python3_package_list_${{ env.BUILD_TAG }}.${{ env.NOW }}.txt
           path: /tmp/package-list
