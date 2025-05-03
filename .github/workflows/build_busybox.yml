@@ -44,7 +44,7 @@ jobs:
        run: |
          docker import /tmp/build/images/rootfs.tar.gz busybox
          docker tag busybox ghcr.io/amf3/just_enough_busybox:${{ env.BUILD_TAG }}_${{ env.NOW }}
-         docker tag busybox ghcr.io/amf3/just_enough_busybox:latest}
+         docker tag busybox ghcr.io/amf3/just_enough_busybox:latest
 
      - name: Push Docker Image
        run: |
