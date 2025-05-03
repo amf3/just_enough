@@ -2,14 +2,14 @@
 services:
   builder:
     environment:
-      - BR2_EXTERNAL=/home/devuser/app
-      - BR2_DL_DIR=/home/devuser/app/buildroot-package-cache
+      - BR2_EXTERNAL=/app
+      - BR2_DL_DIR=/app/buildroot-package-cache
     build:
       context: .
       args:
         UID: "${MY_UID:-1000}"
         GID: "${MY_GID:-1000}"
     volumes:
-      - ..:/home/devuser/app
-    working_dir: /home/devuser/app
+      - ..:/app
+    working_dir: /app
     command: bash -c "echo 'Run `make shell`'"
