@@ -1,6 +1,7 @@
 # Artifacts to ignore
 buildroot-package-cache
 build_with_multipass/rootfs.tar.gz
+build_with_docker/.env
 
 # Prerequisites
 *.d
