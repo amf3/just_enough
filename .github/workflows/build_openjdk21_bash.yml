@@ -1,17 +1,17 @@
-name: Build Bash With OpenJDK17
+name: Build OpenJDK21
 on:
   push:
      branches: [ main ]
      
 jobs:
-  build_openjdk17:
+  build_bash_openjdk21:
      runs-on: ubuntu-latest
      steps:
      - name: set ENV
        run: | 
          echo "NOW=$(date +%s)" >> "$GITHUB_ENV"
          echo "LATEST_TAG=$(cd buildroot && git tag -l  | egrep -v 'legacy|rc' | sort -n | tail -1)" >> "$GITHUB_ENV"
-         echo "BUILD_TAG=2023.02.9" >> "$GITHUB_ENV"
+         echo "BUILD_TAG=2025.02.1" >> "$GITHUB_ENV"
          echo "BR2_EXTERNAL=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
 
      - name: Checkout Submodule/BuildRoot REPO
@@ -21,9 +21,9 @@ jobs:
           fetch-depth: 0
 
      - name: Load Menu config
-       run: make O=/tmp/build -C ./buildroot container_openjdk17_defconfig
+       run: make O=/tmp/build -C ./buildroot container_bash_openjdk21_defconfig
 
-     - name: Build OpenJDK17 RootFS
+     - name: Build Bash OpenJDK21 RootFS
        run: |
          make O=/tmp/build -C ./buildroot source all
          make O=/tmp/build -C ./buildroot external-deps  | egrep -v 'Entering directory|Leaving directory' | sort > /tmp/package-list 
@@ -31,24 +31,24 @@ jobs:
      - name: Upload RootFS as Artifact
        uses: actions/upload-artifact@v4
        with:
-          name: just_enough_openjdk17_rootfs_${{ env.BUILD_TAG }}.${{ env.NOW }}tar.bz2
+          name: just_enough_openjdk21_bash_${{ env.BUILD_TAG }}.${{ env.NOW }}.tar.bz2
           path: /tmp/build/images/rootfs.tar.bz2
 
      - name: Upload Package-List as Artifact
        uses: actions/upload-artifact@v4
        with:
-          name: just_enough_openjdk17_package_list_${{ env.BUILD_TAG }}.${{ env.NOW }}.txt
+          name: just_enough_openjdk21_bash_package_list_${{ env.BUILD_TAG }}.${{ env.NOW }}.txt
           path: /tmp/package-list
 
      - name: Create Docker Image
        run: |
-         docker import /tmp/build/images/rootfs.tar.bz2 openjdk17
-         docker tag openjdk11 ghcr.io/amf3/just_enough_openjdk17:${{ env.BUILD_TAG }}_${{ env.NOW }}
-         docker tag openjdk11 ghcr.io/amf3/just_enough_openjdk17:latest
+         docker import /tmp/build/images/rootfs.tar.bz2 openjdk21_bash
+         docker tag openjdk21_bash ghcr.io/amf3/just_enough_openjdk21_bash:${{ env.BUILD_TAG }}_${{ env.NOW }}
+         docker tag openjdk21_bash ghcr.io/amf3/just_enough_openjdk21_bash:latest
 
 
      - name: Push Docker Image
        run: |
          echo ${{ secrets.GITHUB_TOKEN }}  | docker login ghcr.io -u amf3 --password-stdin
-         docker push ghcr.io/amf3/just_enough_openjdk17:${{ env.BUILD_TAG }}_${{ env.NOW }}
-         docker push ghcr.io/amf3/just_enough_openjdk17:latest
+         docker push ghcr.io/amf3/just_enough_openjdk21_bash:${{ env.BUILD_TAG }}_${{ env.NOW }}
+         docker push ghcr.io/amf3/just_enough_openjdk21_bash:latest

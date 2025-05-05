@@ -26,11 +26,11 @@ work for managing the VM.  The Makefile is being provided as a convience.
 
 ## Makefile targets
 
-* **create**     : This will create and launch the VM with dependencies installed.
-* **start**      : This will start the VM.  If the VM hasn't been created, it will likely fail.
-* **stop**       : This will stop the VM.  If the VM hasn't been created, it will likely fail.
-* **shell**      : This will open a shell to the VM buid environment.
-* **clean**      : Clean will delete the VM.
-* **copy_to**    : This will copy the just_enough repo to the VM.
-* **copy_from**  : This will copy changes made to buildroot configs to the host OS.
+* **create**       : This will create and launch the VM with dependencies installed.
+* **start**        : This will start the VM.  If the VM hasn't been created, it will likely fail.
+* **stop**         : This will stop the VM.  If the VM hasn't been created, it will likely fail.
+* **shell**        : This will open a shell to the VM buid environment.
+* **clean**        : Clean will delete the VM.
+* **copy_to**      : This will copy the just_enough repo to the VM.
+* **get_configs**  : This will copy changes made to buildroot configs to the host OS.
 * **get_rootfs** : Copies the rootfs.tar.gz artifact from the VM to the Host/MacOS environment.
