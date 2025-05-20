@@ -6,11 +6,11 @@ This container provides Bash, Python3, Pip, and Setuptools.  It's my recomendati
  `docker build` will fail on `RUN` statements in the Dockerfile.  The image size with python3 and bash is around 64 MB.
 
 ## Container contents
-* The C library is glibc 2.35.134
-* Python 3.10.5
-* Pip 21.2.4
-* Setuptools 62.1.0
-* Bash 5.1.16
+* Glibc
+* Python 3.x
+* Pip
+* Setuptools
+* Bash
 * An application user named appuser is included with the container image.
 
 ## Examples
