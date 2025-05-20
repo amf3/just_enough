@@ -26,8 +26,8 @@ by [Brian Redbeard](https://github.com/brianredbeard).
 ### Build Status
 
 - [![JustEnough BusyBox](https://github.com/amf3/just_enough/actions/workflows/build_busybox.yml/badge.svg?branch=main)](https://github.com/amf3/just_enough/actions/workflows/build_busybox.yml)
-- [![JustEnough OpenJDK17](https://github.com/amf3/just_enough/actions/workflows/build_openjdk17_bash.yml/badge.svg)](https://github.com/amf3/just_enough/actions/workflows/build_openjdk17_bash.yml)
-- [![JustEnough Bash With OpenJDK11](https://github.com/amf3/just_enough/actions/workflows/build_openjdk17.yml/badge.svg)](https://github.com/amf3/just_enough/actions/workflows/build_openjdk17.yml)
+- [![JustEnough OpenJDK21](https://github.com/amf3/just_enough/actions/workflows/build_openjdk21_bash.yml/badge.svg)](https://github.com/amf3/just_enough/actions/workflows/build_openjdk21_bash.yml)
+- [![JustEnough OpenJDK21 with Bash](https://github.com/amf3/just_enough/actions/workflows/build_openjdk21.yml/badge.svg)](https://github.com/amf3/just_enough/actions/workflows/build_openjdk21.yml)
 - [![JustEnough Python3](https://github.com/amf3/just_enough/actions/workflows/build_python3.yml/badge.svg)](https://github.com/amf3/just_enough/actions/workflows/build_python3.yml)
 - [![JustEnough Python3 With Bash](https://github.com/amf3/just_enough/actions/workflows/build_python3_bash.yml/badge.svg)](https://github.com/amf3/just_enough/actions/workflows/build_python3_bash.yml)
 
@@ -45,8 +45,8 @@ The following images are currently offered.
 | Image Name | Image documentation | Docker or Podman pull |  Dockerfile |
 | ---------- | ------ | --------------------- |  ---------- |
 | [just_enough_busybox](https://github.com/users/amf3/packages/container/package/just_enough_busybox) | [BusyBox](https://github.com/amf3/just_enough/blob/main/docs/containers/busybox.md) | docker pull ghcr.io/amf3/just_enough_busybox:latest | FROM ghcr.io/amf3/just_enough_busybox:latest |
-| [just_enough_openjdk11](https://github.com/users/amf3/packages/container/package/just_enough_openjdk11) | [OpenJDK11](https://github.com/amf3/just_enough/blob/main/docs/containers/openjdk.md) | docker pull ghcr.io/amf3/just_enough_openjdk11:latest | FROM ghcr.io/amf3/just_enough_openjdk11:latest |
-| [just_enough_openjdk11_bash](https://github.com/users/amf3/packages/container/package/just_enough_openjdk11_bash) | [OpenJDK11_Bash](https://github.com/amf3/just_enough/blob/main/docs/containers/openjdk11_bash.md) | docker pull ghcr.io/amf3/just_enough_openjdk11_bash:latest | FROM ghcr.io/amf3/just_enough_openjdk11_bash:latest |
+| [just_enough_openjdk21](https://github.com/users/amf3/packages/container/package/just_enough_openjdk21) | [OpenJDK21](https://github.com/amf3/just_enough/blob/main/docs/containers/openjdk.md) | docker pull ghcr.io/amf3/just_enough_openjdk21:latest | FROM ghcr.io/amf3/just_enough_openjdk21:latest |
+| [just_enough_openjdk21_bash](https://github.com/amf3/just_enough/pkgs/container/just_enough_openjdk21_bash) | [OpenJDK21_Bash](https://github.com/amf3/just_enough/blob/main/docs/containers/openjdk21_bash.md) | docker pull ghcr.io/amf3/just_enough_openjdk21_bash:latest | FROM ghcr.io/amf3/just_enough_openjdk21_bash:latest |
 | [just_enough_python3](https://github.com/users/amf3/packages/container/package/just_enough_python3) | [Python3](https://github.com/amf3/just_enough/blob/main/docs/containers/python3.md) | docker pull ghcr.io/amf3/just_enough_python3:latest | FROM ghcr.io/amf3/just_enough_python3:latest |
 | [just_enough_python3_bash](https://github.com/users/amf3/packages/container/package/just_enough_python3_bash) | [Python3_Bash](https://github.com/amf3/just_enough/blob/main/docs/containers/python3_bash.md) | docker pull ghcr.io/amf3/just_enough_python3_bash:latest | FROM ghcr.io/amf3/just_enough_python3_bash:latest |
 
@@ -58,18 +58,25 @@ Better accessibility to the manifest is planned.
 
 ## Directory Structure
 
+### board
+
+Contains files needed for buildroot customizations. An example being the user_table.txt for creating users within the container images.
+
 ### buildroot
 
 [Buildroot](https://buildroot.org) is the upstrem project which allows for building custom Linux images.  It's included in this repo as a submodule.  
 
+### build_with_docker
+
+Contains a docker-compose and a Makefile for creating a environment to create buildroot containers under Docker.  See the [README](./build_with_docker/README.md) for additional details.
+
+### build_with_multipass
+
+Contains a Makefile for creating a multipass VM to build JustEnough containers.  This is the preferred method of building on macOS.
+
 ### configs
 
 JustEnough container specifications
-
-### scripts
-
-Helper Scripts for customizing containers.
-
 
 ### .github/workflows
 
@@ -93,7 +100,7 @@ load the busybox_defconfig.)
 
 ```
 $ make O=$PWD -C ./buildroot list-defconfigs
-$ make O=$PWD -C ./buildroot container_openjdk11_defconfig
+$ make O=$PWD -C ./buildroot container_busybox_defconfig
 ```
 
 Customize and save container changes with menuconfig.  Look for the packages menu inside menuconfig for 

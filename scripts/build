@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-# Do we run make O=$PWD/bin from here? 
-
