@@ -1,7 +1,8 @@
 name: Build Busybox
 on:
   push:
-     branches: [ main ]
+     # disable for now 
+     branches: [ foo ]
      
 jobs:
   build_busybox:
