@@ -1,6 +1,6 @@
 # JustEnough
 
-This project contains Buildroot customizations for creating base container images.  You can find pre-built JustEnough containers at GitHub's Container Registry.
+This project contains Buildroot customizations for creating base container images.
 
 ## Table of Contents
 
@@ -21,42 +21,7 @@ command like sudo, and sudo doesn't exist within the container, there's no CVE f
 The idea for this project came from a [2015 Sysdig & CoreOS presentation](https://www.youtube.com/watch?v=gMpldbcMHuI) 
 by [Brian Redbeard](https://github.com/brianredbeard).
 
-## Prebuilt container images
-
-### Build Status
-
-- [![JustEnough BusyBox](https://github.com/amf3/just_enough/actions/workflows/build_busybox.yml/badge.svg?branch=main)](https://github.com/amf3/just_enough/actions/workflows/build_busybox.yml)
-- [![JustEnough OpenJDK21](https://github.com/amf3/just_enough/actions/workflows/build_openjdk21_bash.yml/badge.svg)](https://github.com/amf3/just_enough/actions/workflows/build_openjdk21_bash.yml)
-- [![JustEnough OpenJDK21 with Bash](https://github.com/amf3/just_enough/actions/workflows/build_openjdk21.yml/badge.svg)](https://github.com/amf3/just_enough/actions/workflows/build_openjdk21.yml)
-- [![JustEnough Python3](https://github.com/amf3/just_enough/actions/workflows/build_python3.yml/badge.svg)](https://github.com/amf3/just_enough/actions/workflows/build_python3.yml)
-- [![JustEnough Python3 With Bash](https://github.com/amf3/just_enough/actions/workflows/build_python3_bash.yml/badge.svg)](https://github.com/amf3/just_enough/actions/workflows/build_python3_bash.yml)
-
-### Container Image Tags
-
-Container tags using the buildroot release version followed by the epoch time when the image was built.  Latest will 
-always point to the latest built image, regardless of the buildroot release.
-
-### Downloads
-
-Prebuilt container images can be found in the [packages](https://github.com/amf3?tab=packages&repo_name=just_enough) section of this project.  Click on the package name for the container you want to use.  There's a Github Container Registry link at the top of page.  Either "docker pull" or using "FROM ghcr.io/amf3/..." in the Dockerfile will download the image.
-
-The following images are currently offered.
-
-| Image Name | Image documentation | Docker or Podman pull |  Dockerfile |
-| ---------- | ------ | --------------------- |  ---------- |
-| [just_enough_busybox](https://github.com/users/amf3/packages/container/package/just_enough_busybox) | [BusyBox](https://github.com/amf3/just_enough/blob/main/docs/containers/busybox.md) | docker pull ghcr.io/amf3/just_enough_busybox:latest | FROM ghcr.io/amf3/just_enough_busybox:latest |
-| [just_enough_openjdk21](https://github.com/users/amf3/packages/container/package/just_enough_openjdk21) | [OpenJDK21](https://github.com/amf3/just_enough/blob/main/docs/containers/openjdk.md) | docker pull ghcr.io/amf3/just_enough_openjdk21:latest | FROM ghcr.io/amf3/just_enough_openjdk21:latest |
-| [just_enough_openjdk21_bash](https://github.com/amf3/just_enough/pkgs/container/just_enough_openjdk21_bash) | [OpenJDK21_Bash](https://github.com/amf3/just_enough/blob/main/docs/containers/openjdk21_bash.md) | docker pull ghcr.io/amf3/just_enough_openjdk21_bash:latest | FROM ghcr.io/amf3/just_enough_openjdk21_bash:latest |
-| [just_enough_python3](https://github.com/users/amf3/packages/container/package/just_enough_python3) | [Python3](https://github.com/amf3/just_enough/blob/main/docs/containers/python3.md) | docker pull ghcr.io/amf3/just_enough_python3:latest | FROM ghcr.io/amf3/just_enough_python3:latest |
-| [just_enough_python3_bash](https://github.com/users/amf3/packages/container/package/just_enough_python3_bash) | [Python3_Bash](https://github.com/amf3/just_enough/blob/main/docs/containers/python3_bash.md) | docker pull ghcr.io/amf3/just_enough_python3_bash:latest | FROM ghcr.io/amf3/just_enough_python3_bash:latest |
-
-### Container Image Manifest
-
-For now, the Container Image Manifest is published as an artifact.  Click the container name under [Build Status](#build-status) or click on the Actions tab.  Find and click the latest build link and you will see a list of artifacts.  The package_list.txt file will contain what packages and versions were used in building the container.
-
-Better accessibility to the manifest is planned.
-
-## Directory Structure
+## Project Directory Structure
 
 ### board
 
