@@ -1,0 +1,29 @@
+version: 1
+
+input:
+  backend: buildroot
+  mode: staging
+  path: /home/ubuntu/just_enough/staging
+
+binaries:
+  - BUILDROOT/usr/sbin/unbound:/usr/sbin/unbound
+  - BUILDROOT/usr/lib/libz.so.1:/lib/libz.so.1
+
+data:
+  - BUILDROOT/etc/ssl/openssl.cnf
+  - ./passwd:/etc/passwd
+  - ./group:/etc/group
+  - ./nsswitch.conf:/etc/nsswitch.conf
+  - ./unbound.conf:/etc/unbound/unbound.conf
+
+directories:
+  - /etc/ssl
+  - /etc/unbound
+  - /var/cache/unbound
+  - /var/run
+
+symlinks: 
+  - /usr/bin:/bin
+  - /usr/sbin:/sbin
+  - /lib:/lib64
+  - /lib:/usr/lib

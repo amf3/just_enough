@@ -1,3 +1,5 @@
+.DS_Store
+
 # Artifacts to ignore
 buildroot-package-cache
 build_with_multipass/rootfs.tar.gz
