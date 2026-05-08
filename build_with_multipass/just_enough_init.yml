@@ -16,6 +16,8 @@ package_upgrade: true
 
 # Install docker & other utilities
 packages:
+  - libcrypt-dev   
+  - pax-utils
   - apt-transport-https
   - bc
   - btop

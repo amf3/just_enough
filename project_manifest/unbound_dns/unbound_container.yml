@@ -7,14 +7,18 @@ input:
 
 binaries:
   - BUILDROOT/usr/sbin/unbound:/usr/sbin/unbound
+  - BUILDROOT/usr/sbin/unbound-anchor:/usr/sbin/unbound-anchor
+  - BUILDROOT/usr/sbin/unbound-checkconf:/usr/sbin/unbound-checkconf
+  - BUILDROOT/usr/sbin/unbound-control:/usr/sbin/unbound-control
+  - BUILDROOT/usr/sbin/unbound-host:/usr/sbin/unbound-host
   - BUILDROOT/usr/lib/libz.so.1:/lib/libz.so.1
 
 data:
   - BUILDROOT/etc/ssl/openssl.cnf
-  - ./passwd:/etc/passwd
-  - ./group:/etc/group
-  - ./nsswitch.conf:/etc/nsswitch.conf
-  - ./unbound.conf:/etc/unbound/unbound.conf
+  - ./unbound_dns/passwd:/etc/passwd
+  - ./unbound_dns/group:/etc/group
+  - ./unbound_dns/nsswitch.conf:/etc/nsswitch.conf
+  - ./unbound_dns/unbound.conf:/etc/unbound/unbound.conf
 
 directories:
   - /etc/ssl
