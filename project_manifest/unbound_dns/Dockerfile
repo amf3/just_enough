@@ -1,6 +1,6 @@
 FROM scratch
 
-COPY --chown=0:0 my_fake_root/ /
+COPY --chown=100:100 my_staging_dir/ /
 
 EXPOSE 53/tcp
 EXPOSE 53/udp

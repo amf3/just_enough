@@ -19,7 +19,7 @@ clean:
 	multipass purge
 
 copy_to:
-	multipass transfer -r .. just-enough:/home/ubuntu/just_enough
+	multipass transfer -p -r .. just-enough:/home/ubuntu/just_enough
 
 get_configs:
 	multipass transfer -r just-enough:/home/ubuntu/just_enough/configs ..
