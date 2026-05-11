@@ -9,7 +9,7 @@ RUN useradd -u ${UID} -g ${GID} -m devuser || true
 RUN mkdir -p ${APP_DIR} && chown ${UID}:${GID} ${APP_DIR}
 
 RUN apt update && \
-    apt install -y build-essential libncurses-dev file wget cpio unzip rsync bc vim
+ apt install -y build-essential bash bc binutils bzip2 cpio diffutils file findutils g++ gcc gzip libncurses-dev make patch perl python3 rsync unzip wget vim
 
 USER ${UID}
 WORKDIR ${APP_DIR}
