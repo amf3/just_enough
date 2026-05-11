@@ -1,0 +1,83 @@
+name: Build Kitchen Sink RootFS
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_tag:
+        description: 'Tag for the OCI artifact'
+        required: true
+        default: 'latest'
+
+permissions:
+  contents: read
+  packages: write
+
+# Defining these globally ensures they are available to all steps
+env:
+  BR2_EXTERNAL: ${{ github.workspace }}
+  BR2_DL_DIR: ${{ github.workspace }}/.buildroot-dl
+
+jobs:
+  build-rootfs:
+    name: Build x86_64 RootFS
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive  # Pulls the buildroot submodule
+          fetch-depth: 0         # Ensures full history for versioning
+
+      - name: Install Buildroot Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libncurses5-dev rsync cpio python3 unzip wget
+
+      - name: Cache Buildroot Downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.BR2_DL_DIR }}
+          key: buildroot-dl-${{ hashFiles('**/Config.in', '**/external.desc') }}
+          restore-keys: |
+            buildroot-dl-
+
+      - name: Build RootFS
+        run: |
+          # Ensure the download directory exists
+          mkdir -p ${{ env.BR2_DL_DIR }}
+
+          # Configure using your external tree
+          # -C points to the buildroot source
+          # O=$PWD puts the build output in the current directory (just_enough root)
+          make O=$PWD -C ./buildroot x86_container_defconfig
+          
+          # Execute the build
+          time make O=$PWD -C ./buildroot 
+          
+          # Compress the output tarball for the OCI artifact
+          # gzip -c images/rootfs.tar > images/rootfs.tar.gz
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push RootFS as OCI Artifact
+        run: |
+          # Install ORAS
+          curl -LO https://github.com/oras-project/oras/releases/download/v1.2.0/oras_1.2.0_linux_amd64.tar.gz
+          mkdir -p oras-install && tar -zxf oras_1.2.0_linux_amd64.tar.gz -C oras-install
+          
+          # Push to GHCR
+          ./oras-install/oras push ghcr.io/${{ github.repository }}/kitchen-sink:${{ github.event.inputs.build_tag }} \
+            images/rootfs.tar.gz:application/vnd.project.rootfs.layer.v1+tar+gzip
+
+#     - name: Trigger Appliance Builds
+#        uses: peter-evans/repository-dispatch@v3
+#        with:
+#          event-type: kitchen-sink-ready
+#          client-payload: '{"ref": "${{ github.ref }}", "tag": "${{ github.event.inputs.build_tag }}"}'
+
