@@ -56,7 +56,7 @@ jobs:
           time make O=$PWD -C ./buildroot 
           
           # Compress the output tarball for the OCI artifact
-          # gzip -c images/rootfs.tar > images/rootfs.tar.gz
+          gzip -c images/rootfs.tar > images/rootfs.tar.gz
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
