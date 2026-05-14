@@ -46,7 +46,7 @@ jobs:
             bash bc binutils bzip2 cpio diffutils \
             file findutils g++ gcc git gzip libncurses-dev \
             make patch perl python3 rsync tar unzip wget \
-            libcrypt-dev libcrypt-ssl
+            libcrypt-dev libssl-dev
 
       - name: Cache Buildroot Downloads
         uses: actions/cache@v5
