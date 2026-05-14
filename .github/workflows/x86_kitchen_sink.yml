@@ -12,6 +12,7 @@ permissions:
   contents: read
   packages: write
   id-token: write
+  attestations: write
 
 # Defining these globally ensures they are available to all steps
 env:
