@@ -11,6 +11,7 @@ on:
 permissions:
   contents: read
   packages: write
+  id-token: write
 
 # Defining these globally ensures they are available to all steps
 env:
@@ -56,11 +57,14 @@ jobs:
           restore-keys: |
             buildroot-dl-
 
-      - name: Build RootFS
+      - name: Build RootFS and Image Info
         run: |
           mkdir -p ${{ env.BR2_DL_DIR }}
           make O=$PWD -C ./buildroot x86_container_defconfig
           time make O=$PWD -C ./buildroot source all
+          make O=$PWD -C ./buildroot legal-info
+          cp images/rootfs.tar.bz2 .
+          cp legal-info/manifest.csv sbom.csv
 
       - name: Log in to GHCR
         uses: docker/login-action@v4
@@ -69,13 +73,28 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push RootFS as OCI Artifact
+      - name: Push RootFS as OCI Artifact with Annotations
+        id: push_step
         run: |
           # Install ORAS
           curl -LO https://github.com/oras-project/oras/releases/download/v1.3.2/oras_1.3.2_linux_amd64.tar.gz
           mkdir -p oras-install && tar -zxf oras_1.3.2_linux_amd64.tar.gz -C oras-install
           
-          # Push to GHCR
-          ./oras-install/oras push ghcr.io/${{ github.repository }}/kitchen-sink:${{ github.event.inputs.build_tag }} \
-            images/rootfs.tar.bz2:application/vnd.project.rootfs.layer.v1+tar+bz2
+          PUSH_OUTPUT=$(./oras-install/oras push ghcr.io/${{ github.repository }}/kitchen-sink:${{ github.event.inputs.buildroot_tag }} \
+            --annotation "org.opencontainers.image.architecture=amd64" \
+            --annotation "org.opencontainers.image.description=Kitchen Sink RootFS for Just Enough project" \
+            rootfs.tar.bz2:application/vnd.project.rootfs.layer.v1+tar+bz2 \
+            sbom.csv:application/vnd.project.sbom.v1+csv)
+
+          echo $PUSH_OUTPUT
+          DIGEST=$(echo "$PUSH_OUTPUT" | grep -o 'sha256:[a-f0-9]\{64\}')
+          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+
+      - name: Attest Build Provenance
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ghcr.io/${{ github.repository }}/kitchen-sink
+          subject-digest: ${{ steps.push_step.outputs.digest }}
+          push-to-registry: true
+
 

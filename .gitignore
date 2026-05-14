@@ -4,6 +4,8 @@
 buildroot-package-cache
 build_with_multipass/rootfs.tar.gz
 build_with_docker/.env
+oras-install
+oras_1*tar.gz
 
 # Prerequisites
 *.d
