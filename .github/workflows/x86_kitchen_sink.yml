@@ -1,13 +1,13 @@
-name: Build Kitchen Sink RootFS
+name: X86 Kitchen Sink Build RootFS
 
 on:
   workflow_dispatch:
     inputs:
       build_tag:
-        description: 'Tag for the OCI artifact'
-        required: true
-        default: 'latest'
-
+        description: 'Buildroot Tag/Branch to checkout (e.g., 2026.02.1)'
+		required: true
+        default: 'master' # Buildroot's naming, not mine.
+		
 permissions:
   contents: read
   packages: write
@@ -23,19 +23,32 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout Repository
+	  - name: Checkout Parent Repository
         uses: actions/checkout@v4
         with:
-          submodules: recursive  # Pulls the buildroot submodule
-          fetch-depth: 0         # Ensures full history for versioning
+          # We check out submodules manually to control the version
+          submodules: false 
+          fetch-depth: 0
+
+      - name: Initialize and Sync Buildroot Submodule
+        run: |
+          git submodule update --init
+          cd buildroot
+          git fetch --tags
+          # Checkout the specific tag provided in the manual trigger
+          git checkout ${{ github.event.inputs.buildroot_tag }}
+          echo "Buildroot is now at: $(git describe --tags)"
 
       - name: Install Buildroot Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libncurses5-dev rsync cpio python3 unzip wget
+          sudo apt-get install -y build-essential \
+            bash bc binutils bzip2 cpio diffutils \
+            file findutils g++ gcc gzip libncurses-dev \
+            make patch perl python3 rsync tar unzip wget
 
       - name: Cache Buildroot Downloads
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ env.BR2_DL_DIR }}
           key: buildroot-dl-${{ hashFiles('**/Config.in', '**/external.desc') }}
@@ -59,7 +72,7 @@ jobs:
           gzip -c images/rootfs.tar > images/rootfs.tar.gz
 
       - name: Log in to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -68,16 +81,16 @@ jobs:
       - name: Push RootFS as OCI Artifact
         run: |
           # Install ORAS
-          curl -LO https://github.com/oras-project/oras/releases/download/v1.2.0/oras_1.2.0_linux_amd64.tar.gz
-          mkdir -p oras-install && tar -zxf oras_1.2.0_linux_amd64.tar.gz -C oras-install
+          curl -LO https://github.com/oras-project/oras/releases/download/v1.3.2/oras_1.3.2_linux_amd64.tar.gz
+          mkdir -p oras-install && tar -zxf oras_1.3.2_linux_amd64.tar.gz -C oras-install
           
           # Push to GHCR
           ./oras-install/oras push ghcr.io/${{ github.repository }}/kitchen-sink:${{ github.event.inputs.build_tag }} \
             images/rootfs.tar.gz:application/vnd.project.rootfs.layer.v1+tar+gzip
 
-#     - name: Trigger Appliance Builds
-#        uses: peter-evans/repository-dispatch@v3
-#        with:
-#          event-type: kitchen-sink-ready
-#          client-payload: '{"ref": "${{ github.ref }}", "tag": "${{ github.event.inputs.build_tag }}"}'
+      - name: Trigger Appliance Builds
+        uses: peter-evans/repository-dispatch@v4
+        with:
+          event-type: kitchen-sink-ready
+          client-payload: '{"ref": "${{ github.ref }}", "tag": "${{ github.event.inputs.build_tag }}"}'
 

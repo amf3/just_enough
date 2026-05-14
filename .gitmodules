@@ -1,4 +1,4 @@
 [submodule "buildroot"]
 	path = buildroot
-	url = https://git.busybox.net/buildroot
+	url = https://gitlab.com/buildroot.org/buildroot
 	branch = master
