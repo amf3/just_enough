@@ -26,7 +26,7 @@ jobs:
     
     steps:
       - name: Checkout Parent Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           # We check out submodules manually to control the version
           submodules: false 
@@ -81,7 +81,7 @@ jobs:
           curl -LO https://github.com/oras-project/oras/releases/download/v1.3.2/oras_1.3.2_linux_amd64.tar.gz
           mkdir -p oras-install && tar -zxf oras_1.3.2_linux_amd64.tar.gz -C oras-install
           
-          PUSH_OUTPUT=$(./oras-install/oras push ghcr.io/${{ github.repository }}/kitchen-sink:{{ github.event.inputs.buildroot_tag }}-${{ github.run_number }} \
+          PUSH_OUTPUT=$(./oras-install/oras push ghcr.io/${{ github.repository }}/kitchen-sink:${{ github.event.inputs.buildroot_tag }}-${{ github.run_number }} \
             --annotation "org.opencontainers.image.architecture=amd64" \
             --annotation "org.opencontainers.image.description=Kitchen Sink RootFS for Just Enough project" \
             rootfs.tar.bz2:application/vnd.project.rootfs.layer.v1+tar+bz2 \
