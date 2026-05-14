@@ -5,9 +5,9 @@ on:
     inputs:
       build_tag:
         description: 'Buildroot Tag/Branch to checkout (e.g., 2026.02.1)'
-		required: true
+        required: true
         default: 'master' # Buildroot's naming, not mine.
-		
+
 permissions:
   contents: read
   packages: write
@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-	  - name: Checkout Parent Repository
+      - name: Checkout Parent Repository
         uses: actions/checkout@v4
         with:
           # We check out submodules manually to control the version
