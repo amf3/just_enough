@@ -35,7 +35,7 @@ jobs:
           git submodule update --init
           cd buildroot
           git fetch --tags
-          # Checkout the specific tag provided in the manual trigger
+
           git checkout ${{ github.event.inputs.buildroot_tag }}
           echo "Buildroot is now at: $(git describe --tags)"
 
@@ -44,8 +44,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential \
             bash bc binutils bzip2 cpio diffutils \
-            file findutils g++ gcc gzip libncurses-dev \
-            make patch perl python3 rsync tar unzip wget
+            file findutils g++ gcc git gzip libncurses-dev \
+            make patch perl python3 rsync tar unzip wget \
+            libcrypt-dev libcrypt-ssl
 
       - name: Cache Buildroot Downloads
         uses: actions/cache@v5
@@ -57,19 +58,9 @@ jobs:
 
       - name: Build RootFS
         run: |
-          # Ensure the download directory exists
           mkdir -p ${{ env.BR2_DL_DIR }}
-
-          # Configure using your external tree
-          # -C points to the buildroot source
-          # O=$PWD puts the build output in the current directory (just_enough root)
           make O=$PWD -C ./buildroot x86_container_defconfig
-          
-          # Execute the build
-          time make O=$PWD -C ./buildroot 
-          
-          # Compress the output tarball for the OCI artifact
-          gzip -c images/rootfs.tar > images/rootfs.tar.gz
+          time make O=$PWD -C ./buildroot source all
 
       - name: Log in to GHCR
         uses: docker/login-action@v4
@@ -86,11 +77,5 @@ jobs:
           
           # Push to GHCR
           ./oras-install/oras push ghcr.io/${{ github.repository }}/kitchen-sink:${{ github.event.inputs.build_tag }} \
-            images/rootfs.tar.gz:application/vnd.project.rootfs.layer.v1+tar+gzip
-
-      - name: Trigger Appliance Builds
-        uses: peter-evans/repository-dispatch@v4
-        with:
-          event-type: kitchen-sink-ready
-          client-payload: '{"ref": "${{ github.ref }}", "tag": "${{ github.event.inputs.build_tag }}"}'
+            images/rootfs.tar.bz2:application/vnd.project.rootfs.layer.v1+tar+bz2
 
