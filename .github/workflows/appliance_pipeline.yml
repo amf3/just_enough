@@ -87,6 +87,7 @@ jobs:
             project_manifest/${{ matrix.appliance }}/unbound_container.yml \
             project_manifest/${{ matrix.appliance }}/staging
 
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -107,5 +108,42 @@ jobs:
             ghcr.io/${{ github.repository }}/${{ matrix.appliance }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Generate Appliance SBOM
+        run: |
+          # 1. Grab the master SBOM we extracted earlier from the Kitchen Sink
+          MASTER_SBOM="/tmp/kitchen-sink/sbom.csv"
+          APPLIANCE_SBOM="project_manifest/${{ matrix.appliance }}/appliance_sbom.csv"
+
+          # 2. Write the CSV header
+          echo '"PACKAGE","VERSION"' > $APPLIANCE_SBOM
+
+          # 3. Simple grep check: if a package name from the master SBOM
+          # is mentioned in your unbound_container.yml, keep its row.
+          # (Excludes the header row to prevent duplication)
+          tail -n +2 "$MASTER_SBOM" | while IFS=, read -r package version; do
+            # Strip quotes for clean matching
+            clean_pkg=$(echo "$package" | tr -d '"')
+            if grep -q "$clean_pkg" project_manifest/${{ matrix.appliance }}/unbound_container.yml; then
+              echo "$package,$version" >> $APPLIANCE_SBOM
+            fi
+          done
+
+      - name: Attest Appliance SBOM
+        uses: actions/attest-sbom@v2
+        with:
+          subject-name: ghcr.io/${{ github.repository }}/${{ matrix.appliance }}
+          subject-digest: ${{ steps.build_push.outputs.digest }}
+          sbom-path: project_manifest/${{ matrix.appliance }}/appliance_sbom.csv
+          push-to-registry: true
+
+      - name: Attest Appliance Provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ghcr.io/${{ github.repository }}/${{ matrix.appliance }}
+          subject-digest: ${{ steps.build_push.outputs.digest }}
+          push-to-registry: true
+
+
 
 
