@@ -72,6 +72,8 @@ jobs:
         env:
           # Set the environment variable your script explicitly checks for
           BUILDROOT: /tmp/rootfs-extracted
+          # SYSROOT overrides the input.path for binaries/lddtree lookups
+          SYSROOT: /tmp/rootfs-extracted
         run: |
           # Create the staging directory expected by your Dockerfile
           mkdir -p project_manifest/${{ matrix.appliance }}/staging
@@ -84,7 +86,6 @@ jobs:
           python3 project_manifest/tools/assemble.py \
             project_manifest/${{ matrix.appliance }}/unbound_container.yml \
             project_manifest/${{ matrix.appliance }}/staging
-
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
