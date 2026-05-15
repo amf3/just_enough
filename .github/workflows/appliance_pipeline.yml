@@ -32,6 +32,7 @@ jobs:
 
     env:
       BR_TAG: ${{ github.event.inputs.buildroot_tag || '2026.02.1' }}
+      GH_TOKEN: ${{ github.token }}
 
     steps:
       - name: Checkout Repository
