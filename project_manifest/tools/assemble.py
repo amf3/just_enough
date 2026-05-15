@@ -204,7 +204,13 @@ def main():
 
     manifest = load_manifest(manifest_path)
 
-    sysroot = Path(manifest["input"]["path"]).resolve()
+
+    # Check if a SYSROOT environment variable exists; fallback to the manifest file path
+    sysroot_env = os.environ.get("SYSROOT")
+    if sysroot_env:
+        sysroot = Path(sysroot_env).resolve()
+    else:
+        sysroot = Path(manifest["input"]["path"]).resolve()
 
     if not sysroot.exists():
         die(f"Sysroot does not exist: {sysroot}")
