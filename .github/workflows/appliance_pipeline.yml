@@ -115,9 +115,14 @@ jobs:
           provenance: false
           build-args: |
             STAGING_DIR=staging
+            BR_TAG=${{ env.BR_TAG }}
           tags: |
             ghcr.io/${{ github.repository }}/${{ matrix.appliance }}:${{ env.BR_TAG }}
             ghcr.io/${{ github.repository }}/${{ matrix.appliance }}:latest
+          annotations: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.description=A minimal JustEnough ${{ matrix.appliance }} appliance
+            org.opencontainers.image.licenses=Apache-2.0
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
