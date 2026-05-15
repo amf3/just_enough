@@ -93,12 +93,17 @@ jobs:
       - name: Build and Push Appliance Container
         uses: docker/build-push-action@v6
         with:
+          # The context is the directory containing the Dockerfile
           context: project_manifest/${{ matrix.appliance }}
           file: project_manifest/${{ matrix.appliance }}/Dockerfile
           push: true
+          # Pass the relative path of the staging directory inside the context
+          build-args: |
+            STAGING_DIR=staging
           tags: |
             ghcr.io/${{ github.repository }}/${{ matrix.appliance }}:${{ env.BR_TAG }}
             ghcr.io/${{ github.repository }}/${{ matrix.appliance }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
 
