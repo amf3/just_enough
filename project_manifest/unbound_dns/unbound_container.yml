@@ -15,10 +15,10 @@ binaries:
 
 data:
   - BUILDROOT/etc/ssl/openssl.cnf
-  - ./unbound_dns/passwd:/etc/passwd
-  - ./unbound_dns/group:/etc/group
-  - ./unbound_dns/nsswitch.conf:/etc/nsswitch.conf
-  - ./unbound_dns/unbound.conf:/etc/unbound/unbound.conf
+  - ./project_manifest/unbound_dns/passwd:/etc/passwd
+  - ./project_manifest/unbound_dns/group:/etc/group
+  - ./project_manifest/unbound_dns/nsswitch.conf:/etc/nsswitch.conf
+  - ./project_manifest/unbound_dns/unbound.conf:/etc/unbound/unbound.conf
 
 directories:
   - /etc/ssl
