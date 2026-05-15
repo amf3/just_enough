@@ -16,6 +16,7 @@ permissions:
 
 # Defining these globally ensures they are available to all steps
 env:
+  BR_TAG: ${{ github.event.inputs.buildroot_tag }}
   BR2_EXTERNAL: ${{ github.workspace }}
   BR2_DL_DIR: ${{ github.workspace }}/.buildroot-dl
 
@@ -25,6 +26,12 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Debug Variables
+        run: |
+          echo "Triggered Tag: ${{ github.event.inputs.buildroot_tag }}"
+          echo "Mapped Env Tag: ${{ env.BR_TAG }}"
+          echo "Run Number: ${{ github.run_number }}"
+
       - name: Checkout Parent Repository
         uses: actions/checkout@v6
         with:
@@ -38,7 +45,7 @@ jobs:
           cd buildroot
           git fetch --tags
 
-          git checkout ${{ github.event.inputs.buildroot_tag }}
+          git checkout "${{ env.BR_TAG }}" 
           echo "Buildroot is now at: $(git describe --tags)"
 
       - name: Install Buildroot Dependencies
@@ -77,17 +84,23 @@ jobs:
       - name: Push RootFS as OCI Artifact with Annotations
         id: push_step
         run: |
+          REPO="ghcr.io/${{ github.repository }}/kitchen-sink"
+          TARGET_TAG="${{ env.BR_TAG }}-${{ github.run_number }}"
+
+          echo "REPO:       $REPO"
+          echo "TARGET_TAG: $TARGET_TAG"
+
           # Install ORAS
           curl -LO https://github.com/oras-project/oras/releases/download/v1.3.2/oras_1.3.2_linux_amd64.tar.gz
           mkdir -p oras-install && tar -zxf oras_1.3.2_linux_amd64.tar.gz -C oras-install
           
-          PUSH_OUTPUT=$(./oras-install/oras push ghcr.io/${{ github.repository }}/kitchen-sink:${{ github.event.inputs.buildroot_tag }}-${{ github.run_number }} \
+        PUSH_OUTPUT=$(./oras-install/oras push "${REPO}:${TARGET_TAG}" \
             --annotation "org.opencontainers.image.architecture=amd64" \
             --annotation "org.opencontainers.image.description=Kitchen Sink RootFS for Just Enough project" \
             rootfs.tar.bz2:application/vnd.project.rootfs.layer.v1+tar+bz2 \
             sbom.csv:application/vnd.project.sbom.v1+csv)
 
-          ./oras-install/oras tag ghcr.io/${{ github.repository }}/kitchen-sink:${{ github.event.inputs.buildroot_tag }}-${{ github.run_number }} ${{ github.event.inputs.buildroot_tag }}
+        ./oras-install/oras tag "${REPO}:${TARGET_TAG}" "${{ env.BR_TAG }}"
           
           echo $PUSH_OUTPUT
           DIGEST=$(echo "$PUSH_OUTPUT" | grep -o 'sha256:[a-f0-9]\{64\}')
