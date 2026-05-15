@@ -105,15 +105,14 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       - name: Build and Push Appliance Container
+        id: build_push  
         uses: docker/build-push-action@v7
         with:
           # The context is the directory containing the Dockerfile
           context: project_manifest/${{ matrix.appliance }}
           file: project_manifest/${{ matrix.appliance }}/Dockerfile
           push: true
-          # Force a clean, standard image manifest instead of an OCI index
           provenance: false
-          # Pass the relative path of the staging directory inside the context
           build-args: |
             STAGING_DIR=staging
           tags: |
