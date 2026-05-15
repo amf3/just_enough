@@ -88,18 +88,41 @@ jobs:
             project_manifest/${{ matrix.appliance }}/staging
 
       - name: Generate Appliance SBOM
+        shell: python
         run: |
-          MASTER_SBOM="/tmp/kitchen-sink/sbom.csv"
-          # TARGET THE STAGING DIR: This puts it right into the scratch rootfs
-          APPLIANCE_SBOM="project_manifest/${{ matrix.appliance }}/staging/sbom.csv"
-          
-          echo '"PACKAGE","VERSION"' > $APPLIANCE_SBOM
-          tail -n +2 "$MASTER_SBOM" | while IFS=, read -r package version; do
-            clean_pkg=$(echo "$package" | tr -d '"')
-            if grep -q "$clean_pkg" project_manifest/${{ matrix.appliance }}/unbound_container.yml; then
-              echo "$package,$version" >> $APPLIANCE_SBOM
-            fi
-          done
+          import csv
+          import os
+
+          # Define paths
+          master_sbom = "/tmp/kitchen-sink/sbom.csv"
+          manifest = "project_manifest/${{ matrix.appliance }}/unbound_container.yml"
+          appliance_sbom = "project_manifest/${{ matrix.appliance }}/staging/sbom.csv"
+
+          # Ensure output staging directory exists
+          os.makedirs(os.path.dirname(appliance_sbom), exist_ok=True)
+
+          # Read the container manifest to use as a lookup index
+          with open(manifest, "r") as f:
+              manifest_content = f.read()
+
+          # Process the CSV safely with native parsing
+          with open(master_sbom, "r", newline="") as infile, \
+               open(appliance_sbom, "w", newline="") as outfile:
+              
+              reader = csv.reader(infile)
+              writer = csv.writer(outfile)
+              
+              # Pull and write the exact header layout
+              header = next(reader)
+              writer.writerow(header)
+              
+              # Fast, single-pass matching
+              for row in reader:
+                  if row:
+                      package_name = row[0]
+                      # Match package name inside your container YAML manifest
+                      if package_name in manifest_content:
+                          writer.writerow(row)
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
