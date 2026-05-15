@@ -3,7 +3,7 @@ name: X86 Kitchen Sink Build RootFS
 on:
   workflow_dispatch:
     inputs:
-      build_tag:
+      buildroot_tag:
         description: 'Buildroot Tag/Branch to checkout (e.g., 2026.02.1)'
         required: true
         default: 'master' # Buildroot's naming, not mine.
