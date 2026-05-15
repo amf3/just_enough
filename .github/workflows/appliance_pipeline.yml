@@ -1,0 +1,98 @@
+name: Build Minimize Appliances
+
+on:
+  workflow_dispatch:
+    inputs:
+      buildroot_tag:
+        description: 'Kitchen Sink Tag to consume'
+        required: true
+        default: '2026.02.1'
+  # Optional: Automatically trigger this whenever the kitchen sink workflow succeeds
+  workflow_run:
+    workflows: ["Build Kitchen Sink RootFS"]
+    types:
+      - completed
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+jobs:
+  build-appliance:
+    name: Build ${{ matrix.appliance }}
+    runs-on: ubuntu-24.04
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        appliance: [unbound_dns] # Add future appliances here
+
+    env:
+      BR_TAG: ${{ github.event.inputs.buildroot_tag || '2026.02.1' }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Install Host Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pax-utils python3-yaml
+
+      - name: Install ORAS
+        run: |
+          curl -LO https://github.com/oras-project/oras/releases/download/v1.3.2/oras_1.3.2_linux_amd64.tar.gz
+          mkdir -p oras-install && tar -zxf oras_1.3.2_linux_amd64.tar.gz -C oras-install
+          sudo cp oras-install/oras /usr/local/bin/
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify and Pull Kitchen Sink RootFS
+        run: |
+          # 1. Verify the birth certificate we made earlier
+          gh attestation verify oci://ghcr.io/${{ github.repository }}/kitchen-sink:${{ env.BR_TAG }} \
+            --repo ${{ github.repository }}
+          
+          # 2. Pull the layers into a temporary directory
+          mkdir -p /tmp/kitchen-sink
+          cd /tmp/kitchen-sink
+          oras pull ghcr.io/${{ github.repository }}/kitchen-sink:${{ env.BR_TAG }}
+
+      - name: Run Assembly Script
+        run: |
+          # Create the staging directory expected by your Dockerfile
+          mkdir -p project_manifest/${{ matrix.appliance }}/staging
+          
+          # Extract the rootfs tarball pulled by ORAS
+          mkdir -p /tmp/rootfs-extracted
+          tar -xjf /tmp/kitchen-sink/rootfs.tar.bz2 -C /tmp/rootfs-extracted
+          
+          # Run your python assembler
+          python3 project_manifest/tools/assemble.py \
+            --rootfs /tmp/rootfs-extracted \
+            --manifest project_manifest/${{ matrix.appliance }}/unbound_container.yml \
+            --output project_manifest/${{ matrix.appliance }}/staging
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build and Push Appliance Container
+        uses: docker/build-push-action@v6
+        with:
+          context: project_manifest/${{ matrix.appliance }}
+          file: project_manifest/${{ matrix.appliance }}/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/${{ matrix.appliance }}:${{ env.BR_TAG }}
+            ghcr.io/${{ github.repository }}/${{ matrix.appliance }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
