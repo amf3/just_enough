@@ -95,13 +95,13 @@ jobs:
           curl -LO https://github.com/oras-project/oras/releases/download/v1.3.2/oras_1.3.2_linux_amd64.tar.gz
           mkdir -p oras-install && tar -zxf oras_1.3.2_linux_amd64.tar.gz -C oras-install
           
-        PUSH_OUTPUT=$(./oras-install/oras push "${REPO}:${TARGET_TAG}" \
-            --annotation "org.opencontainers.image.architecture=amd64" \
-            --annotation "org.opencontainers.image.description=Kitchen Sink RootFS for Just Enough project" \
-            rootfs.tar.bz2:application/vnd.project.rootfs.layer.v1+tar+bz2 \
-            sbom.csv:application/vnd.project.sbom.v1+csv)
+          PUSH_OUTPUT=$(./oras-install/oras push "${REPO}:${TARGET_TAG}" \
+              --annotation "org.opencontainers.image.architecture=amd64" \
+              --annotation "org.opencontainers.image.description=Kitchen Sink RootFS for Just Enough project" \
+              rootfs.tar.bz2:application/vnd.project.rootfs.layer.v1+tar+bz2 \
+              sbom.csv:application/vnd.project.sbom.v1+csv)
 
-        ./oras-install/oras tag "${REPO}:${TARGET_TAG}" "${{ env.BR_TAG }}"
+          ./oras-install/oras tag "${REPO}:${TARGET_TAG}" "${{ env.BR_TAG }}"
           
           echo $PUSH_OUTPUT
           DIGEST=$(echo "$PUSH_OUTPUT" | grep -o 'sha256:[a-f0-9]\{64\}')
