@@ -91,7 +91,7 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       - name: Build and Push Appliance Container
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           # The context is the directory containing the Dockerfile
           context: project_manifest/${{ matrix.appliance }}
