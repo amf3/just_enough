@@ -74,7 +74,50 @@ jobs:
             project_manifest/${{ matrix.appliance }}/staging
 
       - name: Generate Appliance SBOM
-        # ... unchanged from your existing workflow
+        shell: python
+        run: |
+          import csv
+          import os
+          import sys
+
+          # Define paths
+          master_sbom = "/tmp/kitchen-sink/sbom.csv"
+          manifest = "project_manifest/${{ matrix.appliance }}/container_def.yml"
+          appliance_sbom = "project_manifest/${{ matrix.appliance }}/staging/sbom.csv"
+
+          # Ensure output staging directory exists
+          os.makedirs(os.path.dirname(appliance_sbom), exist_ok=True)
+
+          # Read the container manifest to use as a lookup index
+          with open(manifest, "r") as f:
+              manifest_content = f.read()
+
+          # Process the CSV safely with native parsing
+          with open(master_sbom, "r", newline="") as infile, \
+               open(appliance_sbom, "w", newline="") as outfile:
+              
+              reader = csv.reader(infile)
+              # CRITICAL FIX: Force Unix-style line endings (\n)
+              writer = csv.writer(outfile, lineterminator='\n')
+              
+              # Pull and write the exact header layout
+              header = next(reader)
+              writer.writerow(header)
+              
+              # Fast, single-pass matching
+              for row in reader:
+                  if row:
+                      package_name = row[0]
+                      if package_name in manifest_content:
+                          writer.writerow(row)
+
+          # STDOUT PRINT BLOCK: Logs the generated SBOM directly to the CI output
+          print("\n" + "="*40)
+          print(f" GENERATED SBOM FOR: {os.path.basename(os.path.dirname(appliance_sbom))}")
+          print("="*40)
+          with open(appliance_sbom, "r") as f:
+              sys.stdout.write(f.read())
+          print("="*40 + "\n")
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
