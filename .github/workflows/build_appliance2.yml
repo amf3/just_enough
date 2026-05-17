@@ -1,4 +1,4 @@
-name: Build Appliances
+name: Build Appliances 2
 
 on:
   workflow_dispatch:
@@ -169,32 +169,32 @@ jobs:
             --no-color
         # Exit code 1 if undeclared dependencies found — blocks push step
 
-      # ── PUSH ────────────────────────────────────────────────────────────
-      - name: Push Appliance Container
-        id: build_push
-        uses: docker/build-push-action@v7
-        with:
-          context: project_manifest/${{ matrix.appliance }}
-          file: project_manifest/${{ matrix.appliance }}/Dockerfile
-          push: true
-          provenance: false
-          build-args: |
-            STAGING_DIR=staging
-            BR_TAG=${{ env.BR_TAG }}
-          tags: |
-            ghcr.io/${{ github.repository }}/${{ matrix.appliance }}:${{ env.BR_TAG }}
-            ghcr.io/${{ github.repository }}/${{ matrix.appliance }}:latest
-          annotations: |
-            org.opencontainers.image.source=https://github.com/${{ github.repository }}
-            org.opencontainers.image.description=A minimal JustEnough ${{ matrix.appliance }} appliance
-            org.opencontainers.image.licenses=Apache-2.0
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Attest Appliance Provenance
-        uses: actions/attest-build-provenance@v2
-        with:
-          subject-name: ghcr.io/${{ github.repository }}/${{ matrix.appliance }}
-          subject-digest: ${{ steps.build_push.outputs.digest }}
-          push-to-registry: true
-
+      # ── PUSH ──────
+#      - name: Push Appliance Container
+#        id: build_push
+#        uses: docker/build-push-action@v7
+#        with:
+#          context: project_manifest/${{ matrix.appliance }}
+#          file: project_manifest/${{ matrix.appliance }}/Dockerfile
+#          push: true
+#          provenance: false
+#          build-args: |
+#            STAGING_DIR=staging
+#            BR_TAG=${{ env.BR_TAG }}
+#          tags: |
+#            ghcr.io/${{ github.repository }}/${{ matrix.appliance }}:${{ env.BR_TAG }}
+#            ghcr.io/${{ github.repository }}/${{ matrix.appliance }}:latest
+#          annotations: |
+#            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+#            org.opencontainers.image.description=A minimal JustEnough ${{ matrix.appliance }} appliance
+#            org.opencontainers.image.licenses=Apache-2.0
+#          cache-from: type=gha
+#          cache-to: type=gha,mode=max
+#
+#      - name: Attest Appliance Provenance
+#        uses: actions/attest-build-provenance@v2
+#        with:
+#          subject-name: ghcr.io/${{ github.repository }}/${{ matrix.appliance }}
+#          subject-digest: ${{ steps.build_push.outputs.digest }}
+#          push-to-registry: true
+#
