@@ -140,8 +140,8 @@ jobs:
       # ── VALIDATE ────────────────────────────────────────────────────────
       - name: Install eBPF Hook Scripts
         run: |
-          sudo cp ci/hooks/attach-ebpf-probe /usr/local/bin/
-          sudo cp ci/hooks/detach-ebpf-probe /usr/local/bin/
+          sudo cp project_manifest/tools/attach-ebpf-probe /usr/local/bin/
+          sudo cp project_manifest/tools/detach-ebpf-probe /usr/local/bin/
           sudo chmod +x /usr/local/bin/attach-ebpf-probe
           sudo chmod +x /usr/local/bin/detach-ebpf-probe
           sudo mkdir -p /var/run/ebpf-hooks
@@ -151,7 +151,7 @@ jobs:
 
       - name: Build OCI Bundle from Image
         run: |
-          sudo python3 ci/hooks/build-oci-bundle.py \
+          sudo python3 project_manifest/tools/build-oci-bundle.py \
             validate-target:${{ matrix.appliance }} \
             /tmp/oci-bundle
 
