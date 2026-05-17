@@ -1,4 +1,4 @@
-name: Build Appliances
+name: Build Appliances 2
 
 on:
   workflow_dispatch:
