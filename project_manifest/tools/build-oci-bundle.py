@@ -95,6 +95,8 @@ def patch_spec(bundle: Path, image_config: dict) -> None:
     """
     config_path = bundle / "config.json"
     config = json.loads(config_path.read_text())
+    # Disable terminal allocation — CI environments have no TTY
+    config["process"]["terminal"] = False    # ← add this line
 
     # Build the args list: entrypoint + cmd
     entrypoint = image_config.get("Entrypoint") or []
