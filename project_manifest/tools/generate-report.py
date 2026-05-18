@@ -106,7 +106,8 @@ def parse_log(log_path: Path, container_id: str | None) -> dict[str, list[FileAc
             continue
 
         # Hook log lines contain the container ID in brackets
-        id_match = re.search(r'\[([a-f0-9]{64})\]', line)
+        id_match = re.search(r'\[([a-zA-Z0-9_-]+)\]', line)
+
         if id_match:
             current_id = id_match.group(1)
             if current_id not in container_blocks:

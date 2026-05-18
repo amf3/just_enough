@@ -157,6 +157,23 @@ jobs:
             validate-target:${{ matrix.appliance }} \
             /tmp/oci-bundle
 
+      - name: Debug — verify hooks in OCI spec
+          run: |
+            echo "=== config.json hooks block ==="
+            sudo python3 -c "
+            import json
+            c = json.load(open('/tmp/oci-bundle/config.json'))
+            import json
+            print(json.dumps(c.get('hooks', {}), indent=2))
+            "
+            echo "=== hook scripts present ==="
+            ls -la /usr/local/bin/attach-ebpf-probe /usr/local/bin/detach-ebpf-probe || echo 'MISSING'
+            echo "=== log file ==="
+            ls -la /var/log/ebpf-container-trace.log || echo 'MISSING'
+            echo "=== bpftrace ==="
+            which bpftrace && bpftrace --version || echo 'MISSING'
+
+
       - name: Run Container via runc
         run: |
           CONTAINER_ID=validate-${{ matrix.appliance }}-${{ github.run_id }}
