@@ -107,7 +107,15 @@ def patch_spec(bundle: Path, image_config: dict) -> None:
         "CAP_SETGID",
         "CAP_NET_BIND_SERVICE",
     ]
-    for cap_set in ("bounding", "effective", "permitted", "ambient"):
+    # Ambient deliberately excluded — runner doesn't permit raising it
+    # and unbound handles privilege drop internally
+    for cap_set in ("bounding", "effective", "permitted"):
+        existing = config["process"]["capabilities"].setdefault(cap_set, [])
+        for cap in required_caps:
+            if cap not in existing:
+                existing.append(cap)
+
+    for cap_set in ("bounding", "effective", "permitted"):
         existing = config["process"]["capabilities"].setdefault(cap_set, [])
         for cap in required_caps:
             if cap not in existing:
