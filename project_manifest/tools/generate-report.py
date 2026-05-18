@@ -193,19 +193,38 @@ def load_manifest_paths(manifest_path: Path) -> set[str]:
         print("warning: pyyaml not installed, skipping manifest diff", file=sys.stderr)
         return set()
 
-    manifest  = yaml.safe_load(manifest_path.read_text())
-    declared  = set()
+    manifest = yaml.safe_load(manifest_path.read_text())
+    declared = set()
 
     for section in ("binaries", "data"):
         for entry in manifest.get(section, []):
-            dest = entry.split(":", 1)[1]
+
+            # Skip non-string entries — YAML may parse 'key: value' as a dict
+            if not isinstance(entry, str):
+                print(f"warning: skipping non-string entry in {section}[]: {entry!r}",
+                      file=sys.stderr)
+                continue
+
+            parts = entry.split(":", 1)
+            if len(parts) < 2:
+                print(f"warning: skipping entry with no destination in {section}[]: {entry!r}",
+                      file=sys.stderr)
+                continue
+
+            dest = parts[1]
             declared.add(dest)
 
     for entry in manifest.get("symlinks", []):
-        link_path = entry.split(":", 1)[0]
+        if not isinstance(entry, str):
+            continue
+        parts = entry.split(":", 1)
+        if len(parts) < 2:
+            continue
+        link_path = parts[0]
         declared.add(link_path)
 
     return declared
+
 
 
 # ---------------------------------------------------------------------------
