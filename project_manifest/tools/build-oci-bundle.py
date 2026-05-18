@@ -86,17 +86,33 @@ def generate_spec(bundle: Path) -> None:
 
 
 def patch_spec(bundle: Path, image_config: dict) -> None:
-    """
-    Patch the generated config.json with:
-      1. Correct process args from the image (CMD + ENTRYPOINT)
-      2. Environment variables from the image
-      3. OCI lifecycle hooks for eBPF attachment
-    The base runc spec uses /bin/sh as a placeholder — this replaces it.
-    """
     config_path = bundle / "config.json"
     config = json.loads(config_path.read_text())
+
     # Disable terminal allocation — CI environments have no TTY
-    config["process"]["terminal"] = False    # ← add this line
+    config["process"]["terminal"] = False
+
+    # Allow writes to rootfs — unbound needs to write /var/run/unbound.pid
+    config["root"]["readonly"] = False
+
+    # Add capabilities unbound requires
+    # CAP_SYS_CHROOT  — unbound chroots to /etc/unbound for privilege separation
+    # CAP_SYS_RESOURCE — setrlimit for increasing file descriptor limits
+    # CAP_SETUID/SETGID — dropping from root to unbound user at runtime
+    # CAP_NET_BIND_SERVICE — binding to port 53
+    required_caps = [
+        "CAP_SYS_CHROOT",
+        "CAP_SYS_RESOURCE",
+        "CAP_SETUID",
+        "CAP_SETGID",
+        "CAP_NET_BIND_SERVICE",
+    ]
+    for cap_set in ("bounding", "effective", "permitted", "ambient"):
+        existing = config["process"]["capabilities"].setdefault(cap_set, [])
+        for cap in required_caps:
+            if cap not in existing:
+                existing.append(cap)
+    print(f"  capabilities set: {required_caps}")
 
     # Build the args list: entrypoint + cmd
     entrypoint = image_config.get("Entrypoint") or []
