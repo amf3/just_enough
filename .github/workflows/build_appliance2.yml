@@ -158,7 +158,7 @@ jobs:
             /tmp/oci-bundle
 
       - name: Debug — verify hooks in OCI spec
-          run: |
+        run: |
             echo "=== config.json hooks block ==="
             sudo python3 -c "
             import json
