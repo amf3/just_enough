@@ -142,8 +142,10 @@ jobs:
         run: |
           sudo cp project_manifest/tools/attach-ebpf-probe /usr/local/bin/
           sudo cp project_manifest/tools/detach-ebpf-probe /usr/local/bin/
+          sudo cp project_manifest/tools/generate-report.py /usr/local/bin/
           sudo chmod +x /usr/local/bin/attach-ebpf-probe
           sudo chmod +x /usr/local/bin/detach-ebpf-probe
+          sudo chmod +x /usr/local/bin/generate-report.py
           sudo mkdir -p /var/run/ebpf-hooks
           sudo chmod 700 /var/run/ebpf-hooks
           sudo touch /var/log/ebpf-container-trace.log
@@ -179,7 +181,7 @@ jobs:
 
       - name: Generate Dependency Report
         run: |
-          python3 ci/hooks/generate-report.py \
+          python3 /usr/local/bin/generate-report.py \
             --log /var/log/ebpf-container-trace.log \
             --manifest project_manifest/${{ matrix.appliance }}/container_def.yml \
             --no-color
