@@ -157,9 +157,25 @@ jobs:
 
       - name: Run Container via runc
         run: |
-          sudo runc run \
-            --bundle /tmp/oci-bundle \
-            validate-${{ matrix.appliance }}-${{ github.run_id }}
+          CONTAINER_ID=validate-${{ matrix.appliance }}-${{ github.run_id }}
+
+          # Run in background — unbound is a daemon and never self-exits
+          sudo runc run --bundle /tmp/oci-bundle $CONTAINER_ID &
+          RUNC_PID=$!
+
+          # Allow enough time for full startup sequence and eBPF trace capture
+          echo "Waiting 15s for container startup sequence..."
+          sleep 15
+
+          # Graceful shutdown — gives unbound time to flush
+          echo "Sending SIGTERM to container..."
+          sudo runc kill $CONTAINER_ID SIGTERM || true
+          wait $RUNC_PID || true
+
+          # Clean up runc state
+          sudo runc delete $CONTAINER_ID 2>/dev/null || true
+          echo "Container validation complete"
+
 
       - name: Generate Dependency Report
         run: |
