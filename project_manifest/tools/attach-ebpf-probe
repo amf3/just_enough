@@ -71,22 +71,23 @@ def resume_container(pid: int, container_id: str) -> None:
     log(f"Container PID {pid} resumed (SIGCONT), probe active", container_id)
 
 
-def wait_for_probe_ready(log_offset: int, timeout: float = 5.0) -> bool:
+def wait_for_probe_ready(log_offset: int, timeout: float = 8.0) -> bool:
     """
     Block until bpftrace confirms all probes are attached.
-    bpftrace writes 'Attaching N probes...' to stderr before processing
-    any events. We watch only new log lines to avoid matching 'Attaching'
-    from a previous container run.
+    bpftrace v0.20+ outputs 'Attached N probes' (past tense).
+    Older versions output 'Attaching N probes...' (present tense).
+    We match on 'Attach' to cover both.
     """
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         with LOGFILE.open("r") as f:
             lines = f.readlines()
         new_lines = lines[log_offset:]
-        if any("Attaching" in line for line in new_lines):
+        if any("Attach" in line for line in new_lines):
             return True
         time.sleep(0.05)
     return False
+
 
 def attach_probe(pid: int, container_id: str) -> subprocess.Popen:
     """

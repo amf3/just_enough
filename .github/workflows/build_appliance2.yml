@@ -195,13 +195,21 @@ jobs:
           sudo runc delete $CONTAINER_ID 2>/dev/null || true
           echo "Container validation complete"
 
-
-      - name: Generate Dependency Report
+      - name: Validate (CI drift check)
         run: |
-          python3 /usr/local/bin/generate-report.py \
+          python3 generate-report.py \
             --log /var/log/ebpf-container-trace.log \
-            --manifest project_manifest/${{ matrix.appliance }}/container_def.yml \
+            --baseline project_manifest/unbound_dns/trace_baseline.yml \
+            --check-baseline \
             --no-color
+
+
+      #- name: Generate Dependency Report
+      #  run: |
+      #    python3 /usr/local/bin/generate-report.py \
+      #      --log /var/log/ebpf-container-trace.log \
+      #      --manifest project_manifest/${{ matrix.appliance }}/container_def.yml \
+      #      --no-color
         # Exit code 1 if undeclared dependencies found — blocks push step
 
       # ── PUSH ──────

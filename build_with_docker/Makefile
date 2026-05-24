@@ -22,7 +22,7 @@ prepare: prepare_env prepare_container
 build:
 	docker compose build
 
-launch: prepare
+shell: prepare
 	docker compose run builder bash
 
 clean:
