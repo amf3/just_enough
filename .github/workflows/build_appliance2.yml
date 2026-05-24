@@ -1,9 +1,0 @@
-name: Build Appliances 2
-
-on:
-  workflow_dispatch:
-    inputs:
-      buildroot_tag:
-        description: 'Kitchen Sink Tag to consume'
-        required: true
-        default: '2026.02.1'
