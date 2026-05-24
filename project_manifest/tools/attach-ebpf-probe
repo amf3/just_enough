@@ -1,0 +1,143 @@
+#!/usr/bin/env python3
+"""
+attach-ebpf-probe: OCI createRuntime hook.
+Attaches a bpftrace openat tracer to a container process before it executes.
+Receives container state JSON on stdin per the OCI runtime spec.
+"""
+
+import json
+import os
+import signal
+import subprocess
+import sys
+import tempfile
+import time
+from pathlib import Path
+
+LOGFILE   = Path("/var/log/ebpf-container-trace.log")
+STATE_DIR = Path("/var/run/ebpf-hooks")
+
+BPFTRACE_PROGRAM = """
+tracepoint:syscalls:sys_enter_clone
+/pid == {pid}/
+{{ @children[tid] = 1; }}
+
+tracepoint:syscalls:sys_enter_clone3
+/pid == {pid}/
+{{ @children[tid] = 1; }}
+
+tracepoint:syscalls:sys_enter_openat
+/pid == {pid} || @children[pid]/
+{{ @fname[tid] = args.filename; }}
+
+tracepoint:syscalls:sys_exit_openat
+/pid == {pid} || @children[pid]/
+{{
+    printf("%d %d %s\\n", elapsed, args.ret, str(@fname[tid]));
+    delete(@fname[tid]);
+}}
+
+END {{ clear(@children); clear(@fname); }}
+"""
+
+def log(message: str, container_id: str = "") -> None:
+    prefix = f"[{container_id}] " if container_id else ""
+    entry  = f"{time.strftime('%c')} {prefix}{message}\n"
+    with LOGFILE.open("a") as f:
+        f.write(entry)
+
+
+def read_container_state() -> dict:
+    """OCI runtime hooks receive container state as JSON on stdin."""
+    return json.load(sys.stdin)
+
+
+def freeze_container(pid: int, container_id: str) -> None:
+    """
+    Stop the container process before the entrypoint executes.
+    This prevents a race condition where the process opens files
+    before the eBPF probe is attached.
+    """
+    os.kill(pid, signal.SIGSTOP)
+    log(f"Container PID {pid} frozen (SIGSTOP)", container_id)
+
+
+def resume_container(pid: int, container_id: str) -> None:
+    """
+    Resume the container process now that the eBPF probe is attached
+    and guaranteed to catch every openat from the first instruction.
+    """
+    os.kill(pid, signal.SIGCONT)
+    log(f"Container PID {pid} resumed (SIGCONT), probe active", container_id)
+
+
+def wait_for_probe_ready(log_offset: int, timeout: float = 8.0) -> bool:
+    """
+    Block until bpftrace confirms all probes are attached.
+    bpftrace v0.20+ outputs 'Attached N probes' (past tense).
+    Older versions output 'Attaching N probes...' (present tense).
+    We match on 'Attach' to cover both.
+    """
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        with LOGFILE.open("r") as f:
+            lines = f.readlines()
+        new_lines = lines[log_offset:]
+        if any("Attach" in line for line in new_lines):
+            return True
+        time.sleep(0.05)
+    return False
+
+
+def attach_probe(pid: int, container_id: str) -> subprocess.Popen:
+    """
+    Launch bpftrace as a background process scoped to the container PID.
+    The probe tracks the container init process and all children it forks
+    via clone/clone3, capturing every openat call across the process tree.
+    """
+    program = BPFTRACE_PROGRAM.format(pid=pid)
+    return subprocess.Popen(
+        ["bpftrace", "-e", program],
+        stdout=LOGFILE.open("a"),
+        stderr=subprocess.STDOUT,
+        start_new_session=True,  # equivalent to disown - survives hook exit
+    )
+
+
+def store_probe_pid(container_id: str, bpftrace_pid: int) -> None:
+    """Persist the bpftrace PID so the poststop hook can clean it up."""
+    STATE_DIR.mkdir(mode=0o700, exist_ok=True)
+    (STATE_DIR / container_id).write_text(str(bpftrace_pid))
+
+
+def main() -> int:
+    state        = read_container_state()
+    container_id = state["id"]
+    pid          = state["pid"]
+
+    log(f"Attaching eBPF probe to container PID {pid}", container_id)
+
+    # Record log position so wait_for_probe_ready ignores previous runs
+    log_offset = sum(1 for _ in LOGFILE.open()) if LOGFILE.exists() else 0
+
+    # Freeze the container before the probe attaches to eliminate
+    # the race condition between process start and probe activation
+    freeze_container(pid, container_id)
+
+    bpftrace = attach_probe(pid, container_id)
+
+    probe_ready = wait_for_probe_ready(log_offset)
+    if not probe_ready:
+        log("WARNING: bpftrace ready timeout — resuming anyway", container_id)
+
+    # Probe is now live — every openat from first instruction will be captured
+    resume_container(pid, container_id)
+
+    store_probe_pid(container_id, bpftrace.pid)
+    log(f"bpftrace PID {bpftrace.pid} stored", container_id)
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

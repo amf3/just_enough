@@ -6,6 +6,8 @@ build_with_multipass/rootfs.tar.gz
 build_with_docker/.env
 oras-install
 oras_1*tar.gz
+my_staging_dir
+*.bak
 
 # Prerequisites
 *.d

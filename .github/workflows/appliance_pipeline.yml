@@ -84,7 +84,7 @@ jobs:
           
           # Run the python assembler using strict positional arguments
           python3 project_manifest/tools/assemble.py \
-            project_manifest/${{ matrix.appliance }}/unbound_container.yml \
+            project_manifest/${{ matrix.appliance }}/container_def.yml \
             project_manifest/${{ matrix.appliance }}/staging
 
       - name: Generate Appliance SBOM
@@ -96,7 +96,7 @@ jobs:
 
           # Define paths
           master_sbom = "/tmp/kitchen-sink/sbom.csv"
-          manifest = "project_manifest/${{ matrix.appliance }}/unbound_container.yml"
+          manifest = "project_manifest/${{ matrix.appliance }}/container_def.yml"
           appliance_sbom = "project_manifest/${{ matrix.appliance }}/staging/sbom.csv"
 
           # Ensure output staging directory exists
