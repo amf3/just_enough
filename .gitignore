@@ -7,6 +7,7 @@ build_with_docker/.env
 oras-install
 oras_1*tar.gz
 my_staging_dir
+per-package
 *.bak
 
 # Prerequisites

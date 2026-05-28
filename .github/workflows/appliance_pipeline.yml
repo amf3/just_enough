@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        appliance: [unbound_dns] # Add future appliances here
+        appliance: [unbound_dns, busybox] # Add future appliances here
 
     env:
       BR_TAG: ${{ github.event.inputs.buildroot_tag || '2026.02.1' }}
