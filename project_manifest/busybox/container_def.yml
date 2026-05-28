@@ -1,0 +1,26 @@
+version: 1
+
+input:
+  backend: buildroot
+  mode: per_package
+  path: /app/per-package
+
+binaries:
+  - BUILDROOT/usr/bin/busybox:/usr/bin/busybox
+
+data:
+  - ./project_manifest/busybox/passwd:/etc/passwd
+  - ./project_manifest/busybox/group:/etc/group
+  - ./project_manifest/busybox/nsswitch.conf:/etc/nsswitch.conf
+  - ./project_manifest/busybox/shadow:/etc/shadow
+
+directories:
+  - /var/run
+  - /root
+
+symlinks: 
+  - /usr/bin:/bin
+  - /usr/lib:/lib
+  - /usr/lib:/lib64
+  - /usr/lib64:/usr/lib
+  - /bin:/sbin

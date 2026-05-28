@@ -20,6 +20,7 @@ RUN apt update && \
    pax-utils \
    rsync  \
    software-properties-common \
+   tree \
    unzip \
    wget \
    vim && \

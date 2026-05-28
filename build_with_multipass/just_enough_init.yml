@@ -41,6 +41,7 @@ packages:
   - python3-yaml
   - rsync
   - software-properties-common
+  - tree
   - unzip
   - vim
   - wget
