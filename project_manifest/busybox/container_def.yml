@@ -2,7 +2,7 @@ version: 1
 
 input:
   backend: buildroot
-  mode: per_package
+  mode: staging
   path: /app/per-package
 
 binaries:
