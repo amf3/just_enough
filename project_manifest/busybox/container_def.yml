@@ -2,8 +2,7 @@ version: 1
 
 input:
   backend: buildroot
-  mode: staging
-  path: /app/per-package
+  path: /app/staging
 
 binaries:
   - BUILDROOT/usr/bin/busybox:/usr/bin/busybox
