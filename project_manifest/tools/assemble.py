@@ -24,60 +24,21 @@ def ensure_abs(path):
         die(f"Path must be absolute: {path}")
 
 
-def resolve_source(src, sysroot, mode="staging", per_package_root=None):
+def resolve_source(src, sysroot):
     """
     Resolve a manifest source path to an absolute filesystem path.
 
-    For staging mode, BUILDROOT/ paths are resolved directly against the
-    unified sysroot.
+    BUILDROOT/ paths are resolved directly against the flat rootfs sysroot
+    (either output/target/ locally or the extracted kitchen-sink tarball in CI).
 
-    For per_package mode, BUILDROOT/ paths are resolved by searching across
-    all <per_package_root>/<package>/target/ subtrees in sorted order.
-    The first package directory whose target tree contains the file wins.
+    Local paths beginning with ./ are resolved relative to the working directory.
     """
     if src.startswith("BUILDROOT/"):
-        rel = src[len("BUILDROOT/"):]
-        if mode == "per_package":
-            if per_package_root is None:
-                die("per_package mode requires a per_package_root")
-            for pkg_dir in sorted(per_package_root.iterdir()):
-                if not pkg_dir.is_dir():
-                    continue
-                candidate = pkg_dir / "target" / rel
-                if candidate.exists():
-                    return candidate
-            die(f"Source not found in any per-package target directory: {rel}")
-        return Path(sysroot) / rel
+        return Path(sysroot) / src[len("BUILDROOT/"):]
     elif src.startswith("./"):
         return Path(src).resolve()
     else:
         die(f"Invalid source path: {src}")
-
-
-def get_effective_sysroot(binary_src, mode, sysroot, per_package_root):
-    """
-    Return the sysroot root to use for lddtree and library resolution.
-
-    For staging mode: the unified staging directory (unchanged behaviour).
-
-    For per_package mode: the <package>/target/ directory that owns the
-    binary.  Buildroot per-package target trees include the package's own
-    files plus its transitive dependencies, so this directory is a coherent
-    sysroot for lddtree.
-
-    Example: binary_src = /build/per-package/busybox/target/usr/bin/busybox
-             returns    = /build/per-package/busybox/target
-    """
-    if mode == "per_package" and per_package_root is not None:
-        p = Path(binary_src).resolve()
-        for parent in p.parents:
-            if parent.name == "target" and parent.parent.parent.resolve() == per_package_root.resolve():
-                return parent
-        die(
-            f"Cannot determine per-package sysroot for binary: {binary_src}\n"
-            f"  Expected path of the form <per_package_root>/<pkg>/target/..."
-        )
-    return sysroot
 
 
 def build_symlink_remap(symlinks):
@@ -198,30 +159,24 @@ def find_lib_in_sysroot(sysroot, soname):
     die(f"Cannot find library '{soname}' under {sysroot}")
 
 
-def copy_libs(sysroot, dst_root, binary_src, mode="staging",
-              per_package_root=None, remap=None):
+def copy_libs(sysroot, dst_root, binary_src, remap=None):
     """
     Resolve and copy all shared library dependencies of binary_src.
 
-    For per_package mode, the lddtree root is derived from the per-package
-    target directory that owns the binary rather than the unified sysroot.
-    Buildroot populates each package's target tree with the package's files
-    and its transitive dependencies, so this directory is a coherent root
-    for lddtree to walk.
+    lddtree is rooted at the flat rootfs sysroot (output/target/ or an
+    equivalent extracted tarball). All library lookups and soname symlink
+    reconstruction are performed against this single directory.
     """
-    effective_sysroot = get_effective_sysroot(
-        binary_src, mode, sysroot, per_package_root
-    )
-    libs = run_lddtree(effective_sysroot, binary_src)
+    libs = run_lddtree(sysroot, binary_src)
 
     for lib in libs:
         p = Path(lib)
 
         # lddtree outputs full sysroot-prefixed paths for executables but may
         # emit bare sonames (e.g. 'libc.so.6') when processing shared libraries.
-        # Resolve bare names against the effective sysroot before proceeding.
+        # Resolve bare names against the sysroot before proceeding.
         if not p.is_absolute():
-            p = find_lib_in_sysroot(effective_sysroot, lib)
+            p = find_lib_in_sysroot(sysroot, lib)
         elif not p.exists():
             die(f"Missing library: {p}")
 
@@ -231,7 +186,7 @@ def copy_libs(sysroot, dst_root, binary_src, mode="staging",
         # path. Without this, copy_lib_symlinks would later overwrite the
         # copied file with a symlink, leaving a dangling link and no library.
         real_p = p.resolve()
-        rel = real_p.relative_to(effective_sysroot)
+        rel = real_p.relative_to(sysroot)
         dst_path = "/" + str(rel)
         if remap:
             dst_path = remap_dest(dst_path, remap)
@@ -243,7 +198,7 @@ def copy_libs(sysroot, dst_root, binary_src, mode="staging",
         # Recreate any soname / major-version symlinks that point to this
         # library so the dynamic linker can resolve DT_NEEDED entries at
         # runtime (e.g. libssl.so.3 -> libssl.so.3.0.2).
-        copy_lib_symlinks(effective_sysroot, dst_root, real_p, remap)
+        copy_lib_symlinks(sysroot, dst_root, real_p, remap)
 
 
 def main():
@@ -256,9 +211,10 @@ def main():
     manifest = load_manifest(manifest_path)
 
     input_cfg = manifest.get("input", {})
-    mode = input_cfg.get("mode", "staging")
 
-    # Check if a SYSROOT environment variable exists; fallback to the manifest
+    # SYSROOT environment variable overrides input.path. This allows the same
+    # manifest to be used locally (pointing at output/target/) and in CI
+    # (pointing at an extracted kitchen-sink tarball) without editing the file.
     sysroot_env = os.environ.get("SYSROOT")
     if sysroot_env:
         sysroot = Path(sysroot_env).resolve()
@@ -267,13 +223,6 @@ def main():
 
     if not sysroot.exists():
         die(f"Sysroot does not exist: {sysroot}")
-
-    # For per_package mode the manifest path points to the per-package root
-    # (e.g. output/per-package/).  File resolution searches across all
-    # <per_package_root>/<package>/target/ subtrees.  The staging sysroot is
-    # unused for file resolution in this mode but is kept as a fallback name
-    # for clarity in error messages.
-    per_package_root = sysroot if mode == "per_package" else None
 
     # Build a path-remap table from the declared symlinks so that file copies
     # can redirect destinations before any symlink is created on disk.
@@ -294,13 +243,11 @@ def main():
     # 2. binaries + libs
     for entry in manifest.get("binaries", []):
         src, dst = entry.split(":", 1)
-        src_path = resolve_source(src, sysroot, mode=mode,
-                                  per_package_root=per_package_root)
+        src_path = resolve_source(src, sysroot)
         if not src_path.exists():
             die(f"Binary not found: {src_path}")
         copy_file(src_path, out_dir, dst, remap)
-        copy_libs(sysroot, out_dir, src_path, mode=mode,
-                  per_package_root=per_package_root, remap=remap)
+        copy_libs(sysroot, out_dir, src_path, remap=remap)
 
     # 3. data
     for entry in manifest.get("data", []):
@@ -317,8 +264,7 @@ def main():
             else:
                 die(f"Cannot infer destination for data entry with no prefix: {entry}")
 
-        src_path = resolve_source(src, sysroot, mode=mode,
-                                  per_package_root=per_package_root)
+        src_path = resolve_source(src, sysroot)
         if not src_path.exists():
             die(f"Data file not found: {src_path}")
         copy_file(src_path, out_dir, dst, remap)
@@ -350,4 +296,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

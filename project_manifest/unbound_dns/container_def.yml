@@ -2,7 +2,6 @@ version: 1
 
 input:
   backend: buildroot
-  mode: staging
   path: /home/ubuntu/just_enough/staging
 
 binaries:

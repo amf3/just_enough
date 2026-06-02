@@ -1,6 +1,6 @@
 # just_enough Manifest Reference
 
-The manifest is a YAML file that declares the complete runtime content of a container image. It is the single source of truth for what enters the output rootfs. Everything in the rootfs is either declared in the manifest or mechanically required by a declared binary’s ELF dependency graph.
+The manifest is a YAML file that declares the complete runtime content of a container image. It is the single source of truth for what enters the output rootfs. Everything in the rootfs is either declared in the manifest or mechanically required by a declared binary's ELF dependency graph.
 
 -----
 
@@ -189,7 +189,7 @@ A bare absolute path. No colon. No source reference.
 
 - Directories are created in the staging rootfs using `mkdir -p` semantics.
 - Created before any file copy or symlink creation.
-- Must not reference the sysroot backend. There is no concept of “copying” a directory from the sysroot.
+- Must not reference the sysroot backend. There is no concept of "copying" a directory from the sysroot.
 
 > **Note:** Parent directories for `binaries[]` and `data[]` destinations are created automatically. `directories[]` is for runtime directories that must exist but will not be populated by file copy — for example `/tmp`, `/var/run`, or `/var/log/nginx`.
 
@@ -220,11 +220,11 @@ symlinks:
 
 - The symlink `link_path → target_path` is created in the staging rootfs.
 - Both `link_path` and `target_path` are declared as absolute paths, describing the layout of the container filesystem.
-- At materialization time, `target_path` is converted to a path relative to `link_path`’s parent directory. The symlink written to disk is always relative, ensuring the staging rootfs is self-contained and does not reference host filesystem paths.
+- At materialization time, `target_path` is converted to a path relative to `link_path`'s parent directory. The symlink written to disk is always relative, ensuring the staging rootfs is self-contained and does not reference host filesystem paths.
 - `target_path` must exist within the staging plan: it must be a destination declared in `binaries[]`, `data[]`, `directories[]`, or the `link_path` of another symlink entry.
 - Must not reference the sysroot backend.
 
-> **Example:** `target_path=/usr/bin`, `link_path=/bin`. The link’s parent directory is `/`. The relative target written to disk is `usr/bin`, not `/usr/bin`. Inside the container, where `/` is the rootfs root, both resolve identically.
+> **Example:** `target_path=/usr/bin`, `link_path=/bin`. The link's parent directory is `/`. The relative target written to disk is `usr/bin`, not `/usr/bin`. Inside the container, where `/` is the rootfs root, both resolve identically.
 
 -----
 
