@@ -4,6 +4,8 @@ services:
     environment:
       - BR2_EXTERNAL=/app
       - BR2_DL_DIR=/app/buildroot-package-cache
+    cap_drop:
+      - ALL
     build:
       context: .
       args:
