@@ -6,7 +6,7 @@ on:
       buildroot_tag:
         description: 'Kitchen Sink Tag to consume'
         required: true
-        default: '2026.02.1'
+        default: '2026.02.2'
   # Optional: Automatically trigger this whenever the kitchen sink workflow succeeds
   workflow_run:
     workflows: ["Build Kitchen Sink RootFS"]

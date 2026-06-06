@@ -19,7 +19,4 @@ directories:
 
 symlinks: 
   - /usr/bin:/bin
-  - /usr/lib:/lib
-  - /usr/lib:/lib64
-  - /usr/lib64:/usr/lib
   - /bin:/sbin

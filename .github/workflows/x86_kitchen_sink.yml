@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       buildroot_tag:
-        description: 'Buildroot Tag/Branch to checkout (e.g., 2026.02.1)'
+        description: 'Buildroot Tag/Branch to checkout (e.g., 2026.02.2)'
         required: true
-        default: 'master' # Buildroot's naming, not mine.
+        default: '2026.02.02' # Buildroot's naming, not mine.
 
 permissions:
   contents: read
