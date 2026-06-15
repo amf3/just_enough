@@ -6,7 +6,7 @@ on:
       buildroot_tag:
         description: 'Kitchen Sink Tag to consume'
         required: true
-        default: '2026.02.2'
+        default: '2026.05'
   # Optional: Automatically trigger this whenever the kitchen sink workflow succeeds
   workflow_run:
     workflows: ["Build Kitchen Sink RootFS"]
@@ -28,10 +28,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        appliance: [unbound_dns, busybox] # Add future appliances here
+        appliance: [unbound_dns, busybox, python3.14] # Add future appliances here
 
     env:
-      BR_TAG: ${{ github.event.inputs.buildroot_tag || '2026.02.1' }}
+      BR_TAG: ${{ github.event.inputs.buildroot_tag || '2026.05' }}
       GH_TOKEN: ${{ github.token }}
 
     steps:
