@@ -19,7 +19,7 @@ RUN apt update && \
    make patch python3 python3-pip python3-yaml\
    pax-utils \
    rsync  \
-   software-properties-common \
+   software-properties-common strace \
    tree \
    unzip \
    wget \
