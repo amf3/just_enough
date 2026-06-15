@@ -1,0 +1,33 @@
+version: 1
+
+input:
+  backend: buildroot
+  path: /app/staging
+
+binaries:
+  - BUILDROOT/usr/bin/python3:/usr/bin/python3
+  - BUILDROOT/usr/bin/python3:/usr/bin/pip3
+  - BUILDROOT/usr/lib/libpython3.14.so.1.0:/usr/lib/libpython3.14.so.1.0
+  - BUILDROOT/usr/lib/libexpat.so.1.11.3:/usr/lib/libexpat.so.1.11.3
+  - BUILDROOT/usr/lib/libffi.so.8.1.4:/usr/lib/libffi.so.8.1.4
+  - BUILDROOT/usr/lib/libssl.so.3:/usr/lib/libssl.so.3
+  - BUILDROOT/usr/lib/libcrypto.so.3:/usr/lib/libcrypto.so.3
+  - BUILDROOT/usr/lib/libm.so.6:/usr/lib/libm.so.6
+  - BUILDROOT/usr/lib/libz.so.1:/usr/lib/libz.so.1
+  
+
+data:
+  - BUILDROOT/usr/lib/python3.14:/usr/lib/python3.14
+
+
+directories:
+  - /usr/sbin
+  - /root
+
+symlinks: 
+  - /usr/bin:/bin
+  - /usr/sbin:/sbin
+  - /usr/lib:/lib
+  - /lib:/lib64
+  - /usr/bin/pip3:/usr/bin/pip
+  - /usr/bin/python3:/usr/bin/python

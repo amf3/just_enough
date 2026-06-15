@@ -34,7 +34,8 @@ def resolve_source(src, sysroot):
     Local paths beginning with ./ are resolved relative to the working directory.
     """
     if src.startswith("BUILDROOT/"):
-        return Path(sysroot) / src[len("BUILDROOT/"):]
+        rel = src[len("BUILDROOT/"):]
+        return Path(sysroot) / rel
     elif src.startswith("./"):
         return Path(src).resolve()
     else:
@@ -89,6 +90,36 @@ def copy_file(src, dst_root, dst_path, remap=None):
     dst = dst_root / dst_path.lstrip("/")
     dst.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(src, dst)
+
+
+def copy_tree(src, dst_root, dst_path, remap=None):
+    """
+    Recursively copy a directory tree into the staging rootfs.
+
+    The remap table is applied once to the top-level destination path, then
+    the directory's full contents are mirrored beneath the (possibly
+    remapped) destination. This gives the same result as remapping each file
+    individually for the common case (a backend-prefixed directory landing
+    under a path whose prefix is itself a declared symlink target, e.g.
+    /usr/lib -> /lib), without re-running prefix matching for every file.
+
+    Symlinks within the tree are preserved verbatim (not followed and not
+    re-resolved), consistent with how resolved library soname symlinks are
+    handled in copy_lib_symlinks. File permissions, including setuid/setgid
+    bits, are preserved via copy2.
+
+    Note: unlike binaries[], directory trees copied via data[] are not
+    scanned for ELF dependencies. Any shared libraries required by files
+    inside the tree (e.g. compiled extension modules) must already be
+    present in the rootfs via a declared binaries[] entry or another
+    data[] entry.
+    """
+    ensure_abs(dst_path)
+    if remap:
+        dst_path = remap_dest(dst_path, remap)
+    dst = dst_root / dst_path.lstrip("/")
+    shutil.copytree(src, dst, symlinks=True, copy_function=shutil.copy2,
+                    dirs_exist_ok=True)
 
 
 def run_lddtree(sysroot, binary):
@@ -210,8 +241,6 @@ def main():
     out_dir = Path(sys.argv[2]).resolve()
     manifest = load_manifest(manifest_path)
 
-    input_cfg = manifest.get("input", {})
-
     # SYSROOT environment variable overrides input.path. This allows the same
     # manifest to be used locally (pointing at output/target/) and in CI
     # (pointing at an extracted kitchen-sink tarball) without editing the file.
@@ -219,7 +248,7 @@ def main():
     if sysroot_env:
         sysroot = Path(sysroot_env).resolve()
     else:
-        sysroot = Path(input_cfg["path"]).resolve()
+        sysroot = Path(manifest["input"]["path"]).resolve()
 
     if not sysroot.exists():
         die(f"Sysroot does not exist: {sysroot}")
@@ -247,9 +276,12 @@ def main():
         if not src_path.exists():
             die(f"Binary not found: {src_path}")
         copy_file(src_path, out_dir, dst, remap)
-        copy_libs(sysroot, out_dir, src_path, remap=remap)
+        copy_libs(sysroot, out_dir, src_path, remap)
 
     # 3. data
+    # Entries may reference either a single file or a directory. Directories
+    # are copied recursively, preserving their internal structure, symlinks,
+    # and permissions. Directory trees are not scanned for ELF dependencies.
     for entry in manifest.get("data", []):
         if ":" in entry:
             src, dst = entry.split(":", 1)
@@ -266,8 +298,12 @@ def main():
 
         src_path = resolve_source(src, sysroot)
         if not src_path.exists():
-            die(f"Data file not found: {src_path}")
-        copy_file(src_path, out_dir, dst, remap)
+            die(f"Data source not found: {src_path}")
+
+        if src_path.is_dir():
+            copy_tree(src_path, out_dir, dst, remap)
+        else:
+            copy_file(src_path, out_dir, dst, remap)
 
     # 4. symlinks
     # Entry format is <target>:<link_path>, matching ln -s <target> <link> semantics.
@@ -284,15 +320,15 @@ def main():
         target, link = entry.split(":", 1)
         ensure_abs(link)
         ensure_abs(target)
-        rel_target = os.path.relpath(target, os.path.dirname(link))
         link_path = out_dir / link.lstrip("/")
         link_path.parent.mkdir(parents=True, exist_ok=True)
         if link_path.exists() or link_path.is_symlink():
             link_path.unlink()
-        os.symlink(rel_target, link_path)
+        os.symlink(target, link_path)
 
     print(f"Rootfs built at: {out_dir}")
 
 
 if __name__ == "__main__":
     main()
+
