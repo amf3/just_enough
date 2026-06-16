@@ -1,20 +1,18 @@
-#FROM just_enough_python3_bash
-#RUN pip install flask
-#RUN mkdir /applications
-#COPY ./hello.py /applications/hello.py
-#ENV FLASK_APP=/applications
-#CMD ["flask", "--app", "hello", "run"]
+FROM ghcr.io/amf3/just_enough/busybox:latest AS my-busybox   
+FROM ghcr.io/amf3/just_enough/python3.14:latest             
 
-FROM just_enough_python3_bash
-USER appuser
-RUN /usr/bin/python3 -m venv /tmp/flask
-RUN source /tmp/flask/bin/activate && \
-pip install shiv && \
-mkdir /tmp/artifacts && \
-shiv -c flask -o /tmp/artifacts/flask -p /usr/bin/python3 flask 
+RUN --mount=type=bind,from=my-busybox,source=/bin/busybox,target=/bin/busybox \
+    ["/bin/busybox", "mkdir", "/applications"]
 
-FROM just_enough_python3
-COPY --from=0 /tmp/artifacts/flask /tmp/flask
-COPY hello.py /tmp/hello.py
+COPY ./hello.py /applications/hello.py
+
+RUN ["/usr/bin/python3.14", "-m", "pip", "install", "flask"]
+WORKDIR /applications
+ENV FLASK_APP=hello.py
+
 EXPOSE 5000/tcp
-CMD ["/tmp/flask", "-A", "/tmp/hello.py", "run", "--host=0.0.0.0"]
+ENTRYPOINT ["flask", "run", "--host=0.0.0.0"]
+
+
+
+
