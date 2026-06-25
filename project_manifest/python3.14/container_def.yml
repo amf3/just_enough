@@ -14,7 +14,7 @@ binaries:
   - BUILDROOT/usr/lib/libcrypto.so.3:/usr/lib/libcrypto.so.3
   - BUILDROOT/usr/lib/libm.so.6:/usr/lib/libm.so.6
   - BUILDROOT/usr/lib/libz.so.1:/usr/lib/libz.so.1
-  - BUILDROOT/usr/lib/libgcc_s.so:/usr/lib/liggcc_s.so
+  - BUILDROOT/usr/lib/libgcc_s.so:/usr/lib/libgcc_s.so
   - BUILDROOT/usr/lib/libgcc_s.so.1:/usr/lib/libgcc_s.so.1
   
 data:
