@@ -7,6 +7,9 @@ input:
 binaries:
   - BUILDROOT/usr/bin/python3:/usr/bin/python3
   - BUILDROOT/usr/bin/python3:/usr/bin/pip3
+
+data:
+  - BUILDROOT/usr/lib/python3.14:/usr/lib/python3.14
   - BUILDROOT/usr/lib/libpython3.14.so.1.0:/usr/lib/libpython3.14.so.1.0
   - BUILDROOT/usr/lib/libexpat.so.1.12.1:/usr/lib/libexpat.so.1.12.1
   - BUILDROOT/usr/lib/libffi.so.8.1.4:/usr/lib/libffi.so.8.1.4
@@ -16,9 +19,6 @@ binaries:
   - BUILDROOT/usr/lib/libz.so.1:/usr/lib/libz.so.1
   - BUILDROOT/usr/lib/libgcc_s.so:/usr/lib/libgcc_s.so
   - BUILDROOT/usr/lib/libgcc_s.so.1:/usr/lib/libgcc_s.so.1
-  
-data:
-  - BUILDROOT/usr/lib/python3.14:/usr/lib/python3.14
 
 directories:
   - /usr/sbin
