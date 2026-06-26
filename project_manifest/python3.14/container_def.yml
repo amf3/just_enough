@@ -20,6 +20,9 @@ data:
   - BUILDROOT/usr/lib/libz.so.1:/usr/lib/libz.so.1
   - BUILDROOT/usr/lib/libgcc_s.so:/usr/lib/libgcc_s.so
   - BUILDROOT/usr/lib/libgcc_s.so.1:/usr/lib/libgcc_s.so.1
+  - BUILDROOT/usr/lib/librt.so.1:/usr/lib/librt.so.1
+  - BUILDROOT/usr/lib/libpthread.so.0:/usr/lib/libpthread.so.0
+  - BUILDROOT/usr/lib/libdl.so.2:/usr/lib/libdl.so.2
 
 directories:
   - /usr/sbin
@@ -32,3 +35,5 @@ symlinks:
   - /lib:/lib64
   - /usr/bin/pip3:/usr/bin/pip
   - /usr/bin/python3:/usr/bin/python
+  - /usr/lib/libexpat.so.1.12.1:/usr/lib/libexpat.so
+  - /usr/lib/libexpat.so.1.12.1:/usr/lib/libexpat.so.1
