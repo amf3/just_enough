@@ -12,10 +12,12 @@ data:
   - ./project_manifest/busybox/group:/etc/group
   - ./project_manifest/busybox/nsswitch.conf:/etc/nsswitch.conf
   - ./project_manifest/busybox/shadow:/etc/shadow
+  - BUILDROOT/etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt
 
 directories:
   - /var/run
   - /root
+  - /etc/ssl/certs
 
 symlinks: 
   - /usr/bin:/bin
