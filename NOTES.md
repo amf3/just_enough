@@ -39,6 +39,15 @@ make savedefconfig      Creates a file named defconfig which needs to be copied 
 make qemu_x86_defconfig Preloads .config file with qemu specifics
 make olddefconfig       Needed to update symbols & dependencies in .config
 
+### Busybox
+
+make  busybox-menuconfig   Edits busybox config
+
+When loading the existing config in board/just_enough/busybox_config at the bottom of the menuconfig
+menu, the process is running from build/busybox1.2.3.  
+
+One needs to use a relative path two levels up. `../../board/just_enough/busybox_config`.
+
 ### Random make stuff
 make                    Builds source (Defaults to _all:)
 make source             Downloads for local offline builds

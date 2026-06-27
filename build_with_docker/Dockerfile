@@ -26,5 +26,8 @@ RUN apt update && \
    vim && \
  rm -rf /var/lib/apt/lists/*
 
+# Work around for https://github.com/uutils/coreutils/issues/12166
+RUN update-alternatives --install /usr/bin/install install /usr/bin/gnuinstall 100
+
 USER ${UID}
 WORKDIR ${APP_DIR}
