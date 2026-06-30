@@ -24,13 +24,8 @@ RUN --mount=type=bind,from=bb_shell,source=/usr/bin/ash,target=/usr/bin/ash \
     --mount=type=bind,from=bb_shell,source=/usr/bin/busybox,target=/usr/bin/busybox \
     ["/usr/bin/ash", "-c", "/usr/bin/unbound-anchor -a /etc/unbound/get-dnssec-root.key || true"]
 
-#RUN --mount=type=bind,from=bb_shell,source=/usr/bin/ash,target=/usr/bin/ash \
-#    --mount=type=bind,from=bb_shell,source=/usr/bin/busybox,target=/usr/bin/busybox \
-#    --mount=type=bind,from=bb_shell,source=/usr/bin/wget,target=/usr/bin/wget \
-#    ["/usr/bin/ash", "-c", "/usr/bin/wget -O /etc/unbound/root.hints http://www.internic.net/domain/named.cache"]
-
 RUN --mount=type=bind,from=bb_shell,source=/usr/bin/busybox,target=/usr/bin/busybox \
-    ["/usr/bin/busybox", "wget", "-O", "/etc/unbound/root.hints", "http://www.internic.net/domain/named.cache"]
+    ["/usr/bin/busybox", "wget", "-O", "/etc/unbound/root.hints", "https://www.internic.net/domain/named.cache"]
 
 RUN --mount=type=bind,from=bb_shell,source=/usr/bin/busybox,target=/usr/bin/busybox \
     ["/usr/bin/busybox", "chown", "101:101", "/etc/unbound/root.hints"]
