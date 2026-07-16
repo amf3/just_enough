@@ -42,11 +42,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y pax-utils python3-yaml
+          # OWASP CycloneDX generator for Buildroot's manifest.csv format
+          pip install --break-system-packages cyclonedx-buildroot
 
       - name: Install ORAS
         run: |
-          curl -LO https://github.com/oras-project/oras/releases/download/v1.3.2/oras_1.3.2_linux_amd64.tar.gz
-          mkdir -p oras-install && tar -zxf oras_1.3.2_linux_amd64.tar.gz -C oras-install
+          curl -LO https://github.com/oras-project/oras/releases/download/v1.3.3/oras_1.3.3_linux_amd64.tar.gz
+          mkdir -p oras-install && tar -zxf oras_1.3.3_linux_amd64.tar.gz -C oras-install
           sudo cp oras-install/oras /usr/local/bin/
 
       - name: Log in to GHCR
@@ -87,20 +89,18 @@ jobs:
             project_manifest/${{ matrix.appliance }}/container_def.yml \
             project_manifest/${{ matrix.appliance }}/staging
 
-      - name: Generate Appliance SBOM
+      - name: Filter Kitchen Sink Manifest
         shell: python
         run: |
           import csv
           import os
-          import sys
 
           # Define paths
           master_sbom = "/tmp/kitchen-sink/sbom.csv"
           manifest = "project_manifest/${{ matrix.appliance }}/container_def.yml"
-          appliance_sbom = "project_manifest/${{ matrix.appliance }}/staging/sbom.csv"
-
-          # Ensure output staging directory exists
-          os.makedirs(os.path.dirname(appliance_sbom), exist_ok=True)
+          # Intermediate only - NOT staged into the image. cyclonedx-buildroot
+          # consumes this and emits the real deliverable as CycloneDX JSON.
+          filtered_csv = "/tmp/${{ matrix.appliance }}-filtered-manifest.csv"
 
           # Read the container manifest to use as a lookup index
           with open(manifest, "r") as f:
@@ -108,16 +108,18 @@ jobs:
 
           # Process the CSV safely with native parsing
           with open(master_sbom, "r", newline="") as infile, \
-               open(appliance_sbom, "w", newline="") as outfile:
-              
+               open(filtered_csv, "w", newline="") as outfile:
+
               reader = csv.reader(infile)
-              # CRITICAL FIX: Force Unix-style line endings (\n)
+              # Force Unix-style line endings (\n)
               writer = csv.writer(outfile, lineterminator='\n')
-              
+
               # Pull and write the exact header layout
+              # (cyclonedx-buildroot expects: PACKAGE,VERSION,LICENSE,
+              # LICENSE FILES,SOURCE ARCHIVE,SOURCE SITE,DEPENDENCIES WITH LICENSES)
               header = next(reader)
               writer.writerow(header)
-              
+
               # Fast, single-pass matching
               for row in reader:
                   if row:
@@ -125,13 +127,29 @@ jobs:
                       if package_name in manifest_content:
                           writer.writerow(row)
 
-          # STDOUT PRINT BLOCK: Logs the generated SBOM directly to the CI output
-          print("\n" + "="*40)
-          print(f" GENERATED SBOM FOR: {os.path.basename(os.path.dirname(appliance_sbom))}")
-          print("="*40)
-          with open(appliance_sbom, "r") as f:
-              sys.stdout.write(f.read())
-          print("="*40 + "\n")
+      - name: Generate Appliance SBOM (CycloneDX JSON)
+        run: |
+          # This path assumes staging/ is COPYed as the image rootfs, so
+          # staging/etc/sbom.json lands at /etc/sbom.json in the final image.
+          # Adjust if your Dockerfile's COPY layout differs.
+          SBOM_OUT="project_manifest/${{ matrix.appliance }}/staging/etc/sbom.json"
+          mkdir -p "$(dirname "$SBOM_OUT")"
+
+          cyclonedx-buildroot \
+            -i "/tmp/${{ matrix.appliance }}-filtered-manifest.csv" \
+            -o "$SBOM_OUT" \
+            -n "just_enough-${{ matrix.appliance }}" \
+            -v "${{ env.BR_TAG }}" \
+            -m "just_enough"
+
+          echo ""
+          echo "========================================"
+          echo " GENERATED CYCLONEDX SBOM FOR: ${{ matrix.appliance }}"
+          echo "========================================"
+          COMPONENT_COUNT=$(python3 -c "import json; print(len(json.load(open('$SBOM_OUT')).get('components', [])))")
+          echo "Components: $COMPONENT_COUNT"
+          python3 -m json.tool "$SBOM_OUT"
+          echo "========================================"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -164,7 +182,3 @@ jobs:
           subject-name: ghcr.io/${{ github.repository }}/${{ matrix.appliance }}
           subject-digest: ${{ steps.build_push.outputs.digest }}
           push-to-registry: true
-
-
-
-
