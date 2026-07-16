@@ -27,6 +27,7 @@ data:
 directories:
   - /usr/sbin
   - /root
+  - /etc
 
 symlinks: 
   - /usr/bin:/bin
