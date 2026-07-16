@@ -132,7 +132,7 @@ jobs:
           # This path assumes staging/ is COPYed as the image rootfs, so
           # staging/etc/sbom.json lands at /etc/sbom.json in the final image.
           # Adjust if your Dockerfile's COPY layout differs.
-          SBOM_OUT="project_manifest/${{ matrix.appliance }}/staging/etc/sbom.json"
+          SBOM_OUT="project_manifest/${{ matrix.appliance }}/staging/etc/sbom"
           mkdir -p "$(dirname "$SBOM_OUT")"
 
           cyclonedx-buildroot \
@@ -146,10 +146,9 @@ jobs:
           echo "========================================"
           echo " GENERATED CYCLONEDX SBOM FOR: ${{ matrix.appliance }}"
           echo "========================================"
-          #COMPONENT_COUNT=$(python3 -c "import json; print(len(json.load(open('$SBOM_OUT')).get('components', [])))")
-          #echo "Components: $COMPONENT_COUNT"
-          #python3 -m json.tool "$SBOM_OUT"
-          echo "PLACE HOLDER"
+          COMPONENT_COUNT=$(python3 -c "import json; print(len(json.load(open(\"${SBOM_OUT}.json\")).get('components', [])))")
+          echo "Components: $COMPONENT_COUNT"
+          python3 -m json.tool "${SBOM_OUT}.json"
           echo "========================================"
 
       - name: Set up Docker Buildx
