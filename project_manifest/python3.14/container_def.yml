@@ -11,7 +11,7 @@ binaries:
 data:
   - BUILDROOT/usr/lib/python3.14:/usr/lib/python3.14
   - BUILDROOT/usr/lib/libpython3.14.so.1.0:/usr/lib/libpython3.14.so.1.0
-  - BUILDROOT/usr/lib/libexpat.so.1.12.1:/usr/lib/libexpat.so.1.12.1
+  - BUILDROOT/usr/lib/libexpat.so.1.12.2:/usr/lib/libexpat.so.1.12.2
   - BUILDROOT/usr/lib/libexpat.so.1:/usr/lib/libexpat.so.1
   - BUILDROOT/usr/lib/libffi.so.8.1.4:/usr/lib/libffi.so.8.1.4
   - BUILDROOT/usr/lib/libssl.so.3:/usr/lib/libssl.so.3
