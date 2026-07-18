@@ -58,9 +58,9 @@ jobs:
           # Apply the rolling base tag to the multi-arch index
           oras tag "${TAG_UNIQUE}" "${BR_TAG}"
           
-          # Extract digest for provenance attestation
-          DIGEST=$(echo "$INDEX_OUTPUT" | grep -o 'sha256:[a-f0-9]\{64\}')
-          echo "DIGEST=$DIGEST" >> $GITHUB_ENV
+          # Explicitly grab the true index digest directly from the target tag
+          DIGEST=$(oras manifest fetch "${TAG_UNIQUE}" | sha256sum | awk '{print $1}')
+          echo "DIGEST=sha256:$DIGEST" >> $GITHUB_ENV
 
       - name: Attest Index Provenance
         uses: actions/attest-build-provenance@v2
