@@ -1,4 +1,4 @@
-name: Build Appliances
+name: Build Container Appliances
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
       buildroot_tag:
         description: 'Kitchen Sink Tag to consume'
         required: true
-        default: '2026.05'
+        default: '2026.05.1'
   workflow_run:
     workflows: ["Build Kitchen Sink RootFS"]
     types:
@@ -31,7 +31,7 @@ jobs:
         platform: [linux/amd64, linux/arm64]
 
     env:
-      BR_TAG: ${{ github.event.inputs.buildroot_tag || '2026.05' }}
+      BR_TAG: ${{ github.event.inputs.buildroot_tag || '2026.05.1' }}
       GH_TOKEN: ${{ github.token }}
 
     steps:

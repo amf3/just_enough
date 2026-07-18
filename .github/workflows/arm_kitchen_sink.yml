@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       buildroot_tag:
-        description: 'Buildroot Tag/Branch to checkout (e.g., 2026.05)'
+        description: 'Buildroot Tag/Branch to checkout (e.g., 2026.05.1)'
         required: true
         default: '2026.05.1' 
 
