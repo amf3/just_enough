@@ -7,7 +7,6 @@ on:
         description: 'Kitchen Sink Tag to consume'
         required: true
         default: '2026.05'
-  # Optional: Automatically trigger this whenever the kitchen sink workflow succeeds
   workflow_run:
     workflows: ["Build Kitchen Sink RootFS"]
     types:
@@ -21,14 +20,15 @@ permissions:
 
 jobs:
   build-appliance:
-    name: Build ${{ matrix.appliance }}
+    name: Build ${{ matrix.appliance }} (${{ matrix.platform }})
     runs-on: ubuntu-24.04
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     
     strategy:
       fail-fast: false
       matrix:
-        appliance: [unbound_dns, busybox, python3.14] # Add future appliances here
+        appliance: [unbound_dns, busybox, python3.14]
+        platform: [linux/amd64, linux/arm64]
 
     env:
       BR_TAG: ${{ github.event.inputs.buildroot_tag || '2026.05' }}
@@ -58,31 +58,23 @@ jobs:
 
       - name: Verify and Pull Kitchen Sink RootFS
         run: |
-          # 1. Verify the birth certificate we made earlier
           gh attestation verify oci://ghcr.io/${{ github.repository }}/kitchen-sink:${{ env.BR_TAG }} \
             --repo ${{ github.repository }}
           
-          # 2. Pull the layers into a temporary directory
           mkdir -p /tmp/kitchen-sink
           cd /tmp/kitchen-sink
           oras pull ghcr.io/${{ github.repository }}/kitchen-sink:${{ env.BR_TAG }}
 
-
       - name: Run Assembly Script
         env:
-          # Set the environment variable your script explicitly checks for
           BUILDROOT: /tmp/rootfs-extracted
-          # SYSROOT overrides the input.path for binaries/lddtree lookups
           SYSROOT: /tmp/rootfs-extracted
         run: |
-          # Create the staging directory expected by your Dockerfile
           mkdir -p project_manifest/${{ matrix.appliance }}/staging
           
-          # Extract the rootfs tarball pulled by ORAS
           mkdir -p /tmp/rootfs-extracted
           tar -xjf /tmp/kitchen-sink/rootfs.tar.bz2 -C /tmp/rootfs-extracted
           
-          # Run the python assembler using strict positional arguments
           python3 project_manifest/tools/assemble.py \
             project_manifest/${{ matrix.appliance }}/container_def.yml \
             project_manifest/${{ matrix.appliance }}/staging
@@ -94,44 +86,39 @@ jobs:
           import os
           import sys
 
-          # Define paths
           master_sbom = "/tmp/kitchen-sink/sbom.csv"
           manifest = "project_manifest/${{ matrix.appliance }}/container_def.yml"
           appliance_sbom = "project_manifest/${{ matrix.appliance }}/staging/sbom.csv"
 
-          # Ensure output staging directory exists
           os.makedirs(os.path.dirname(appliance_sbom), exist_ok=True)
 
-          # Read the container manifest to use as a lookup index
           with open(manifest, "r") as f:
               manifest_content = f.read()
 
-          # Process the CSV safely with native parsing
           with open(master_sbom, "r", newline="") as infile, \
                open(appliance_sbom, "w", newline="") as outfile:
               
               reader = csv.reader(infile)
-              # CRITICAL FIX: Force Unix-style line endings (\n)
               writer = csv.writer(outfile, lineterminator='\n')
               
-              # Pull and write the exact header layout
               header = next(reader)
               writer.writerow(header)
               
-              # Fast, single-pass matching
               for row in reader:
                   if row:
                       package_name = row[0]
                       if package_name in manifest_content:
                           writer.writerow(row)
 
-          # STDOUT PRINT BLOCK: Logs the generated SBOM directly to the CI output
           print("\n" + "="*40)
           print(f" GENERATED SBOM FOR: {os.path.basename(os.path.dirname(appliance_sbom))}")
           print("="*40)
           with open(appliance_sbom, "r") as f:
               sys.stdout.write(f.read())
           print("="*40 + "\n")
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -140,9 +127,9 @@ jobs:
         id: build_push  
         uses: docker/build-push-action@v7
         with:
-          # The context is the directory containing the Dockerfile
           context: project_manifest/${{ matrix.appliance }}
           file: project_manifest/${{ matrix.appliance }}/Dockerfile
+          platforms: ${{ matrix.platform }}
           push: true
           provenance: false
           build-args: |
@@ -164,7 +151,3 @@ jobs:
           subject-name: ghcr.io/${{ github.repository }}/${{ matrix.appliance }}
           subject-digest: ${{ steps.build_push.outputs.digest }}
           push-to-registry: true
-
-
-
-

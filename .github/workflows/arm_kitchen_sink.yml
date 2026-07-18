@@ -1,4 +1,4 @@
-name: X86 Kitchen Sink Build RootFS
+name: ARM Kitchen Sink Build RootFS
 
 on:
   workflow_dispatch:
@@ -14,16 +14,14 @@ permissions:
   id-token: write
   attestations: write
 
-# Defining these globally ensures they are available to all steps
 env:
   BR_TAG: ${{ github.event.inputs.buildroot_tag }}
   BR2_EXTERNAL: ${{ github.workspace }}
   BR2_DL_DIR: ${{ github.workspace }}/.buildroot-dl
 
-
 jobs:
   build-rootfs:
-    name: Build x86_64 RootFS
+    name: Build arm64 RootFS
     runs-on: ubuntu-latest
     
     steps:
@@ -36,7 +34,6 @@ jobs:
       - name: Checkout Parent Repository
         uses: actions/checkout@v6
         with:
-          # We check out submodules manually to control the version
           submodules: false 
           fetch-depth: 0
 
@@ -45,7 +42,6 @@ jobs:
           git submodule update --init
           cd buildroot
           git fetch --tags
-
           git checkout "${{ env.BR_TAG }}" 
           echo "Buildroot is now at: $(git describe --tags)"
 
@@ -69,7 +65,7 @@ jobs:
       - name: Build RootFS and Image Info
         run: |
           mkdir -p ${{ env.BR2_DL_DIR }}
-          make O=$PWD -C ./buildroot x86_container_defconfig
+          make O=$PWD -C ./buildroot arm_container_defconfig
           time make O=$PWD -C ./buildroot source all
           make O=$PWD -C ./buildroot legal-info
           cp images/rootfs.tar.bz2 .
@@ -86,22 +82,22 @@ jobs:
         id: push_step
         run: |
           REPO="ghcr.io/${{ github.repository }}/kitchen-sink"
-          TARGET_TAG="${{ env.BR_TAG }}-${{ github.run_number }}-amd64"
+          TARGET_TAG="${{ env.BR_TAG }}-${{ github.run_number }}-arm64"
 
           echo "REPO:       $REPO"
           echo "TARGET_TAG: $TARGET_TAG"
 
-          # Install ORAS
+          # Install ORAS v1.3.2
           curl -LO https://github.com/oras-project/oras/releases/download/v1.3.2/oras_1.3.2_linux_amd64.tar.gz
           mkdir -p oras-install && tar -zxf oras_1.3.2_linux_amd64.tar.gz -C oras-install
           
           PUSH_OUTPUT=$(./oras-install/oras push "${REPO}:${TARGET_TAG}" \
-              --annotation "org.opencontainers.image.architecture=amd64" \
-              --annotation "org.opencontainers.image.description=Kitchen Sink RootFS for Just Enough project" \
+              --annotation "org.opencontainers.image.architecture=arm64" \
+              --annotation "org.opencontainers.image.description=Kitchen Sink RootFS for Just Enough project (ARM64)" \
               rootfs.tar.bz2:application/vnd.project.rootfs.layer.v1+tar+bz2 \
               sbom.csv:application/vnd.project.sbom.v1+csv)
 
-          ./oras-install/oras tag "${REPO}:${TARGET_TAG}" "${{ env.BR_TAG }}"
+          ./oras-install/oras tag "${REPO}:${TARGET_TAG}" "${{ env.BR_TAG }}-arm64"
           
           echo $PUSH_OUTPUT
           DIGEST=$(echo "$PUSH_OUTPUT" | grep -o 'sha256:[a-f0-9]\{64\}')
@@ -113,5 +109,3 @@ jobs:
           subject-name: ghcr.io/${{ github.repository }}/kitchen-sink
           subject-digest: ${{ steps.push_step.outputs.digest }}
           push-to-registry: true
-
-

@@ -1,0 +1,71 @@
+name: Merge Kitchen Sink Multi-Arch Index
+
+on:
+  workflow_dispatch:
+    inputs:
+      buildroot_tag:
+        description: 'Tag to merge (e.g., 2026.05)'
+        required: true
+        default: '2026.05'
+      run_number:
+        description: 'GitHub Run Number to tie the unique digest to'
+        required: true
+
+permissions:
+  packages: write
+  id-token: write
+  attestations: write
+
+env:
+  BR_TAG: ${{ github.event.inputs.buildroot_tag }}
+  RUN_NUM: ${{ github.event.inputs.run_number }}
+
+jobs:
+  merge-manifests:
+    name: Create Multi-Arch Index
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install ORAS
+        run: |
+          curl -LO https://github.com/oras-project/oras/releases/download/v1.3.2/oras_1.3.2_linux_amd64.tar.gz
+          mkdir -p oras-install && tar -zxf oras_1.3.2_linux_amd64.tar.gz -C oras-install
+          sudo cp oras-install/oras /usr/local/bin/
+
+      - name: Generate Multi-Arch Index
+        run: |
+          REPO="ghcr.io/${{ github.repository }}/kitchen-sink"
+          
+          # Target unified tags
+          TAG_UNIQUE="${REPO}:${BR_TAG}-${RUN_NUM}"
+          TAG_LATEST="${REPO}:${BR_TAG}"
+          
+          # Source architecture-specific tags
+          SRC_AMD64="${REPO}:${BR_TAG}-${RUN_NUM}-amd64"
+          SRC_ARM64="${REPO}:${BR_TAG}-${RUN_NUM}-arm64"
+          
+          echo "Merging ${SRC_AMD64} and ${SRC_ARM64} into ${TAG_UNIQUE}"
+          
+          # Create OCI Image Index utilizing ORAS v1.3+ capabilities
+          INDEX_OUTPUT=$(oras manifest index create "${TAG_UNIQUE}" "${SRC_AMD64}" "${SRC_ARM64}")
+          echo "$INDEX_OUTPUT"
+          
+          # Apply the rolling base tag to the multi-arch index
+          oras tag "${TAG_UNIQUE}" "${BR_TAG}"
+          
+          # Extract digest for provenance attestation
+          DIGEST=$(echo "$INDEX_OUTPUT" | grep -o 'sha256:[a-f0-9]\{64\}')
+          echo "DIGEST=$DIGEST" >> $GITHUB_ENV
+
+      - name: Attest Index Provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ghcr.io/${{ github.repository }}/kitchen-sink
+          subject-digest: ${{ env.DIGEST }}
+          push-to-registry: true
