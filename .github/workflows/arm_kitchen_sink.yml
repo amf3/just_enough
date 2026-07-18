@@ -1,1 +1,12 @@
-# NEW WORKFLOW
+name: ARM RootFS Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  stub:
+    name: Placeholder Stub
+    runs-on: ubuntu-latest
+    steps:
+      - name: Idle
+        run: echo "Stub active. Ready for branch development."
