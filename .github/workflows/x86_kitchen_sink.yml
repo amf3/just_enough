@@ -85,7 +85,7 @@ jobs:
         id: push_step
         run: |
           REPO="ghcr.io/${{ github.repository }}/kitchen-sink"
-          TARGET_TAG="${{ env.BR_TAG }}-${{ github.run_number }}-amd64"
+          TARGET_TAG="${{ env.BR_TAG }}-${{ github.sha }}-amd64"
 
           echo "REPO:       $REPO"
           echo "TARGET_TAG: $TARGET_TAG"

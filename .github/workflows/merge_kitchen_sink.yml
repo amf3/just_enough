@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       buildroot_tag:
-        description: 'Tag to merge (e.g., 2026.05.1)'
+        description: 'Tag to merge (e.g., 2026.05)'
         required: true
-        default: '2026.05.1'
-      run_number:
-        description: 'GitHub Run Number to tie the unique digest to'
+        default: '2026.05'
+      git_sha:
+        description: 'The Git Commit SHA used for the builds'
         required: true
 
 permissions:
@@ -18,7 +18,7 @@ permissions:
 
 env:
   BR_TAG: ${{ github.event.inputs.buildroot_tag }}
-  RUN_NUM: ${{ github.event.inputs.run_number }}
+  COMMIT_SHA: ${{ github.event.inputs.git_sha }}
 
 jobs:
   merge-manifests:
@@ -43,12 +43,11 @@ jobs:
           REPO="ghcr.io/${{ github.repository }}/kitchen-sink"
           
           # Target unified tags
-          TAG_UNIQUE="${REPO}:${BR_TAG}-${RUN_NUM}"
-          TAG_LATEST="${REPO}:${BR_TAG}"
+          TAG_UNIQUE="${REPO}:${BR_TAG}-${COMMIT_SHA}"
           
-          # Source architecture-specific tags
-          SRC_AMD64="${REPO}:${BR_TAG}-${RUN_NUM}-amd64"
-          SRC_ARM64="${REPO}:${BR_TAG}-${RUN_NUM}-arm64"
+          # Source architecture-specific tags using the Git SHA
+          SRC_AMD64="${REPO}:${BR_TAG}-${COMMIT_SHA}-amd64"
+          SRC_ARM64="${REPO}:${BR_TAG}-${COMMIT_SHA}-arm64"
           
           echo "Merging ${SRC_AMD64} and ${SRC_ARM64} into ${TAG_UNIQUE}"
           
