@@ -52,9 +52,15 @@ jobs:
           echo "Merging ${SRC_AMD64} and ${SRC_ARM64} into ${TAG_UNIQUE}"
           
           # Create OCI Image Index utilizing ORAS v1.3+ capabilities
-          INDEX_OUTPUT=$(oras manifest index create "${TAG_UNIQUE}" "${SRC_AMD64}" "${SRC_ARM64}")
+          # INDEX_OUTPUT=$(oras manifest index create "${TAG_UNIQUE}" "${SRC_AMD64}" "${SRC_ARM64}")
+          # echo "$INDEX_OUTPUT"
+
+          # Create OCI Image Index with explicit platform mapping
+          INDEX_OUTPUT=$(oras manifest index create "${TAG_UNIQUE}" \
+            "${SRC_AMD64}" --platform linux/amd64 \
+            "${SRC_ARM64}" --platform linux/arm64)
           echo "$INDEX_OUTPUT"
-          
+
           # Apply the rolling base tag to the multi-arch index
           oras tag "${TAG_UNIQUE}" "${BR_TAG}"
           
