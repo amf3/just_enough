@@ -61,10 +61,14 @@ jobs:
           gh attestation verify oci://ghcr.io/${{ github.repository }}/kitchen-sink:${{ env.BR_TAG }} \
             --repo ${{ github.repository }}
           
+          # Strip 'linux/' prefix from 'linux/amd64' or 'linux/arm64' to get 'amd64' or 'arm64'
+          ARCH="${{ replace(matrix.platform, 'linux/', '') }}"
+          
           mkdir -p /tmp/kitchen-sink
           cd /tmp/kitchen-sink
-          oras pull "ghcr.io/amf3/just_enough/kitchen-sink:${{ env.BR_TAG }}-${{ matrix.arch }}"
+          oras pull "ghcr.io/amf3/just_enough/kitchen-sink:${{ env.BR_TAG }}-$ARCH"
 
+          
       - name: Run Assembly Script
         env:
           BUILDROOT: /tmp/rootfs-extracted
