@@ -63,7 +63,7 @@ jobs:
           
           mkdir -p /tmp/kitchen-sink
           cd /tmp/kitchen-sink
-          oras pull --platform ${{ matrix.platform }} ghcr.io/amf3/just_enough/kitchen-sink:${{ env.BR_TAG }}
+          oras pull "ghcr.io/amf3/just_enough/kitchen-sink:${{ env.BR_TAG }}-${{ matrix.arch }}"
 
       - name: Run Assembly Script
         env:
