@@ -97,6 +97,9 @@ jobs:
               rootfs.tar.bz2:application/vnd.project.rootfs.layer.v1+tar+bz2 \
               sbom.csv:application/vnd.project.sbom.v1+csv)
 
+          # Stable arch-specific alias, symmetric with the amd64 build.
+          # The plain "${BR_TAG}" tag is owned by merge_kitchen_sink.yml —
+          # it points at the multi-arch index, not a single-arch image.
           ./oras-install/oras tag "${REPO}:${TARGET_TAG}" "${{ env.BR_TAG }}-arm64"
           
           echo $PUSH_OUTPUT

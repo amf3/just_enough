@@ -8,7 +8,10 @@ on:
         required: true
         default: '2026.05.1'
   workflow_run:
-    workflows: ["Build Kitchen Sink RootFS"]
+    # Must match merge_kitchen_sink.yml's `name:` field exactly — that's
+    # the workflow that produces the merged multi-arch index this
+    # pipeline verifies and consumes.
+    workflows: ["Merge Kitchen Sink Multi-Arch Index"]
     types:
       - completed
 
@@ -58,15 +61,20 @@ jobs:
 
       - name: Verify and Pull Kitchen Sink RootFS
         run: |
+          # Verify provenance on the merged multi-arch index...
           gh attestation verify oci://ghcr.io/${{ github.repository }}/kitchen-sink:${{ env.BR_TAG }} \
             --repo ${{ github.repository }}
-          
-          # Strip 'linux/' prefix from 'linux/amd64' or 'linux/arm64' to get 'amd64' or 'arm64'
-          ARCH="${{ replace(matrix.platform, 'linux/', '') }}"
-          
+
+          # ...then pull the arch-specific rootfs this matrix leg actually
+          # needs. Strip the "linux/" prefix off matrix.platform in bash —
+          # GitHub Actions expressions have no replace()/string-substitution
+          # function, so this can't be done in ${{ }} syntax.
+          PLATFORM="${{ matrix.platform }}"
+          ARCH="${PLATFORM#linux/}"
+
           mkdir -p /tmp/kitchen-sink
           cd /tmp/kitchen-sink
-          oras pull "ghcr.io/amf3/just_enough/kitchen-sink:${{ env.BR_TAG }}-$ARCH"
+          oras pull "ghcr.io/${{ github.repository }}/kitchen-sink:${{ env.BR_TAG }}-$ARCH"
 
           
       - name: Run Assembly Script

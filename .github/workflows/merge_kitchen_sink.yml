@@ -7,9 +7,6 @@ on:
         description: 'Tag to merge (e.g., 2026.05)'
         required: true
         default: '2026.05'
-      git_sha:
-        description: 'The Git Commit SHA used for the builds'
-        required: true
 
 permissions:
   packages: write
@@ -18,7 +15,6 @@ permissions:
 
 env:
   BR_TAG: ${{ github.event.inputs.buildroot_tag }}
-  COMMIT_SHA: ${{ github.event.inputs.git_sha }}
 
 jobs:
   merge-manifests:
@@ -42,12 +38,15 @@ jobs:
         run: |
           REPO="ghcr.io/${{ github.repository }}/kitchen-sink"
           
-          # Target unified tags
-          TAG_UNIQUE="${REPO}:${BR_TAG}-${COMMIT_SHA}"
+          # Target unified tag
+          TAG_UNIQUE="${REPO}:${BR_TAG}"
           
-          # Source architecture-specific tags using the Git SHA
-          SRC_AMD64="${REPO}:${BR_TAG}-${COMMIT_SHA}-amd64"
-          SRC_ARM64="${REPO}:${BR_TAG}-${COMMIT_SHA}-arm64"
+          # Source: the stable per-arch tags each build workflow publishes.
+          # No commit SHA needed here — each arch workflow always keeps
+          # its "<tag>-<arch>" alias pointed at its latest successful push,
+          # so merge just picks up whatever's current for both arches.
+          SRC_AMD64="${REPO}:${BR_TAG}-amd64"
+          SRC_ARM64="${REPO}:${BR_TAG}-arm64"
           
           echo "Merging ${SRC_AMD64} and ${SRC_ARM64} into ${TAG_UNIQUE}"
           
@@ -55,9 +54,6 @@ jobs:
           INDEX_OUTPUT=$(oras manifest index create "${TAG_UNIQUE}" "${SRC_AMD64}" "${SRC_ARM64}")
           echo "$INDEX_OUTPUT"
 
-          # Apply the rolling base tag to the multi-arch index
-          oras tag "${TAG_UNIQUE}" "${BR_TAG}"
-          
           # Explicitly grab the true index digest directly from the target tag
           DIGEST=$(oras manifest fetch "${TAG_UNIQUE}" | sha256sum | awk '{print $1}')
           echo "DIGEST=sha256:$DIGEST" >> $GITHUB_ENV

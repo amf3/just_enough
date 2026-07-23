@@ -100,7 +100,10 @@ jobs:
               rootfs.tar.bz2:application/vnd.project.rootfs.layer.v1+tar+bz2 \
               sbom.csv:application/vnd.project.sbom.v1+csv)
 
-          ./oras-install/oras tag "${REPO}:${TARGET_TAG}" "${{ env.BR_TAG }}"
+          # Stable arch-specific alias, symmetric with the arm64 build.
+          # The plain "${BR_TAG}" tag is owned by merge_kitchen_sink.yml —
+          # it points at the multi-arch index, not a single-arch image.
+          ./oras-install/oras tag "${REPO}:${TARGET_TAG}" "${{ env.BR_TAG }}-amd64"
           
           echo $PUSH_OUTPUT
           DIGEST=$(echo "$PUSH_OUTPUT" | grep -o 'sha256:[a-f0-9]\{64\}')
@@ -112,5 +115,3 @@ jobs:
           subject-name: ghcr.io/${{ github.repository }}/kitchen-sink
           subject-digest: ${{ steps.push_step.outputs.digest }}
           push-to-registry: true
-
-
