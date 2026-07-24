@@ -68,7 +68,7 @@ jobs:
           # ...then pull the arch-specific rootfs this matrix leg actually
           # needs. Strip the "linux/" prefix off matrix.platform in bash —
           # GitHub Actions expressions have no replace()/string-substitution
-          # function, so this can't be done in ${{ }} syntax.
+          # function, so this can't be done with a workflow expression.
           PLATFORM="${{ matrix.platform }}"
           ARCH="${PLATFORM#linux/}"
 
