@@ -144,7 +144,8 @@ jobs:
           file: project_manifest/${{ matrix.appliance }}/Dockerfile
           platforms: ${{ matrix.platform }}
           push: true
-          provenance: false
+          provenance: mode=max
+          sbom: true
           build-args: |
             STAGING_DIR=staging
             BR_TAG=${{ env.BR_TAG }}
