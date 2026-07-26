@@ -135,6 +135,8 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
+        with:
+          version: latest
 
       - name: Build and Push Appliance Container
         id: build_push  
@@ -184,6 +186,8 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
+        with:
+          version: latest
 
       - name: Create Multi-Arch Manifest
         id: merge
