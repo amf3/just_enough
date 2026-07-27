@@ -23,6 +23,8 @@ data:
   - BUILDROOT/usr/lib/librt.so.1:/usr/lib/librt.so.1
   - BUILDROOT/usr/lib/libpthread.so.0:/usr/lib/libpthread.so.0
   - BUILDROOT/usr/lib/libdl.so.2:/usr/lib/libdl.so.2
+  - ./project_manifest/busybox/passwd:/etc/passwd
+  - ./project_manifest/busybox/group:/etc/group
 
 directories:
   - /usr/sbin

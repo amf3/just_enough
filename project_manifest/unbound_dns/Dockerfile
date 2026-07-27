@@ -36,5 +36,7 @@ RUN --mount=type=bind,from=bb_shell,source=/usr/bin/busybox,target=/usr/bin/busy
 EXPOSE 53/tcp
 EXPOSE 53/udp
 
+USER 101:101
+
 ENTRYPOINT ["/usr/sbin/unbound"]
 CMD ["-d", "-c", "/etc/unbound/unbound.conf"]
