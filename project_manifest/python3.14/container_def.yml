@@ -5,7 +5,9 @@ input:
   path: /app/staging
 
 binaries:
+  - BUILDROOT/usr/bin/python:/usr/bin/python
   - BUILDROOT/usr/bin/python3:/usr/bin/python3
+  - BUILDROOT/usr/bin/python3.14:/usr/bin/python3.14
   - BUILDROOT/usr/bin/python3:/usr/bin/pip3
 
 data:
@@ -37,6 +39,5 @@ symlinks:
   - /usr/lib:/lib
   - /lib:/lib64
   - /usr/bin/pip3:/usr/bin/pip
-  - /usr/bin/python3:/usr/bin/python3.14
   - /usr/lib/libexpat.so.1.12.1:/usr/lib/libexpat.so
   - /usr/lib/libexpat.so.1.12.1:/usr/lib/libexpat.so.1
