@@ -16,7 +16,6 @@ LABEL org.opencontainers.image.description="A Python3  appliance built via Build
 
 # Use the variable in the COPY command
 COPY --chown=65534:65534 ${STAGING_DIR}/ /
-COPY --chown=65534:65534 ${STAGING_DIR}/root /
 USER 65534:65534
 
 CMD ["/usr/bin/python3"]
