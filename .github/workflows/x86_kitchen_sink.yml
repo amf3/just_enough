@@ -1,12 +1,11 @@
-name: X86 Kitchen Sink Build RootFS
-
+name: AMD64 RootFS Build
 on:
   workflow_dispatch:
     inputs:
       buildroot_tag:
-        description: 'Buildroot Tag/Branch to checkout (e.g., 2026.05)'
+        description: 'Buildroot Tag/Branch to checkout (e.g., 2026.05.1)'
         required: true
-        default: '2026.05' 
+        default: '2026.05.1' 
 
 permissions:
   contents: read
@@ -86,7 +85,7 @@ jobs:
         id: push_step
         run: |
           REPO="ghcr.io/${{ github.repository }}/kitchen-sink"
-          TARGET_TAG="${{ env.BR_TAG }}-${{ github.run_number }}"
+          TARGET_TAG="${{ env.BR_TAG }}-${{ github.sha }}-amd64"
 
           echo "REPO:       $REPO"
           echo "TARGET_TAG: $TARGET_TAG"
@@ -101,7 +100,10 @@ jobs:
               rootfs.tar.bz2:application/vnd.project.rootfs.layer.v1+tar+bz2 \
               sbom.csv:application/vnd.project.sbom.v1+csv)
 
-          ./oras-install/oras tag "${REPO}:${TARGET_TAG}" "${{ env.BR_TAG }}"
+          # Stable arch-specific alias, symmetric with the arm64 build.
+          # The plain "${BR_TAG}" tag is owned by merge_kitchen_sink.yml —
+          # it points at the multi-arch index, not a single-arch image.
+          ./oras-install/oras tag "${REPO}:${TARGET_TAG}" "${{ env.BR_TAG }}-amd64"
           
           echo $PUSH_OUTPUT
           DIGEST=$(echo "$PUSH_OUTPUT" | grep -o 'sha256:[a-f0-9]\{64\}')
@@ -113,5 +115,3 @@ jobs:
           subject-name: ghcr.io/${{ github.repository }}/kitchen-sink
           subject-digest: ${{ steps.push_step.outputs.digest }}
           push-to-registry: true
-
-

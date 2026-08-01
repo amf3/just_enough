@@ -15,8 +15,8 @@ LABEL org.opencontainers.image.licenses="Apache-2.0"
 LABEL org.opencontainers.image.description="A Python3  appliance built via Buildroot and the JustEnough project"
 
 # Use the variable in the COPY command
-COPY --chown=100:100 ${STAGING_DIR}/ /
-COPY --chown=100:100 ${STAGING_DIR}/root /
+COPY --chown=65534:65534 ${STAGING_DIR}/ /
+USER 65534:65534
 
 CMD ["/usr/bin/python3"]
 

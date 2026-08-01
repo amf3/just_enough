@@ -2,11 +2,113 @@ name: ARM RootFS Build
 
 on:
   workflow_dispatch:
+    inputs:
+      buildroot_tag:
+        description: 'Buildroot Tag/Branch to checkout (e.g., 2026.05.1)'
+        required: true
+        default: '2026.05.1' 
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+env:
+  BR_TAG: ${{ github.event.inputs.buildroot_tag }}
+  BR2_EXTERNAL: ${{ github.workspace }}
+  BR2_DL_DIR: ${{ github.workspace }}/.buildroot-dl
 
 jobs:
-  stub:
-    name: Placeholder Stub
+  build-rootfs:
+    name: Build arm64 RootFS
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Idle
-        run: echo "Stub active. Ready for branch development."
+      - name: Debug Variables
+        run: |
+          echo "Triggered Tag: ${{ github.event.inputs.buildroot_tag }}"
+          echo "Mapped Env Tag: ${{ env.BR_TAG }}"
+          echo "Run Number: ${{ github.run_number }}"
+
+      - name: Checkout Parent Repository
+        uses: actions/checkout@v6
+        with:
+          submodules: false 
+          fetch-depth: 0
+
+      - name: Initialize and Sync Buildroot Submodule
+        run: |
+          git submodule update --init
+          cd buildroot
+          git fetch --tags
+          git checkout "${{ env.BR_TAG }}" 
+          echo "Buildroot is now at: $(git describe --tags)"
+
+      - name: Install Buildroot Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential \
+            bash bc binutils bzip2 cpio diffutils \
+            file findutils g++ gcc git gzip libncurses-dev \
+            make patch perl python3 rsync tar unzip wget \
+            libcrypt-dev libssl-dev
+
+      - name: Cache Buildroot Downloads
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.BR2_DL_DIR }}
+          key: buildroot-dl-${{ hashFiles('**/Config.in', '**/external.desc') }}
+          restore-keys: |
+            buildroot-dl-
+
+      - name: Build RootFS and Image Info
+        run: |
+          mkdir -p ${{ env.BR2_DL_DIR }}
+          make O=$PWD -C ./buildroot arm_container_defconfig
+          time make O=$PWD -C ./buildroot source all
+          make O=$PWD -C ./buildroot legal-info
+          cp images/rootfs.tar.bz2 .
+          cp legal-info/manifest.csv sbom.csv
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push RootFS as OCI Artifact with Annotations
+        id: push_step
+        run: |
+          REPO="ghcr.io/${{ github.repository }}/kitchen-sink"
+          TARGET_TAG="${{ env.BR_TAG }}-${{ github.sha }}-arm64"
+
+          echo "REPO:       $REPO"
+          echo "TARGET_TAG: $TARGET_TAG"
+
+          # Install ORAS v1.3.2
+          curl -LO https://github.com/oras-project/oras/releases/download/v1.3.2/oras_1.3.2_linux_amd64.tar.gz
+          mkdir -p oras-install && tar -zxf oras_1.3.2_linux_amd64.tar.gz -C oras-install
+          
+          PUSH_OUTPUT=$(./oras-install/oras push "${REPO}:${TARGET_TAG}" \
+              --annotation "org.opencontainers.image.architecture=arm64" \
+              --annotation "org.opencontainers.image.description=Kitchen Sink RootFS for Just Enough project (ARM64)" \
+              rootfs.tar.bz2:application/vnd.project.rootfs.layer.v1+tar+bz2 \
+              sbom.csv:application/vnd.project.sbom.v1+csv)
+
+          # Stable arch-specific alias, symmetric with the amd64 build.
+          # The plain "${BR_TAG}" tag is owned by merge_kitchen_sink.yml —
+          # it points at the multi-arch index, not a single-arch image.
+          ./oras-install/oras tag "${REPO}:${TARGET_TAG}" "${{ env.BR_TAG }}-arm64"
+          
+          echo $PUSH_OUTPUT
+          DIGEST=$(echo "$PUSH_OUTPUT" | grep -o 'sha256:[a-f0-9]\{64\}')
+          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+
+      - name: Attest Build Provenance
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ghcr.io/${{ github.repository }}/kitchen-sink
+          subject-digest: ${{ steps.push_step.outputs.digest }}
+          push-to-registry: true
