@@ -1,4 +1,4 @@
-name: Merge Kitchen Sink Multi-Arch Index
+name: Create RootFS Multi-Arch Index
 
 on:
   workflow_dispatch:

@@ -1,4 +1,4 @@
-name: ARM Kitchen Sink Build RootFS
+name: ARM RootFS Build
 
 on:
   workflow_dispatch:
