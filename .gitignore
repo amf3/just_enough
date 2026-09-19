@@ -9,6 +9,7 @@ oras_1*tar.gz
 my_staging_dir
 my_root_fs
 per-package
+defconfig
 *.bak
 
 # Prerequisites
