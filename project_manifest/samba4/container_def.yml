@@ -1,0 +1,24 @@
+version: 1
+
+input:
+  backend: buildroot
+  path: /home/ubuntu/just_enough/staging
+
+binaries:
+  - BUILDROOT/usr/bin/smbd:/usr/bin/smbd
+
+data:
+  - ./project_manifest/samba4/passwd:/etc/passwd
+  - ./project_manifest/samba4/group:/etc/group
+
+directories:
+  - /usr/sbin
+  - /home/nobody
+  - /root
+  - /etc
+
+symlinks:
+  - /usr/bin:/bin
+  - /usr/sbin:/sbin
+  - /usr/lib:/lib
+  - /lib:/lib64
