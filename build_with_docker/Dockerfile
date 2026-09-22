@@ -16,7 +16,7 @@ RUN apt update && \
    g++ gcc git golang-go gnupg-agent gzip \
    libncurses-dev libssl-dev less libcrypt-dev \
    jq \
-   make patch python3 python3-pip python3-yaml\
+   make patch python3 python3-pip python3-yaml python3.14-venv \
    pax-utils \
    rsync  \
    software-properties-common strace \
