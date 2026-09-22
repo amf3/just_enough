@@ -2,16 +2,25 @@
 
 import os
 import shutil
-import subprocess
 import sys
 from pathlib import Path, PurePosixPath
 
 import yaml
+from elftools.elf.dynamic import DynamicSection
+from elftools.elf.elffile import ELFFile
+from elftools.elf.segments import InterpSegment
 
 
-def die(msg):
-    print(f"ERROR: {msg}", file=sys.stderr)
-    sys.exit(1)
+class ManifestError(Exception):
+    """Raised for any fatal problem encountered while assembling the rootfs
+    (a malformed manifest entry, a missing source file, etc). Caught only in
+    main() and translated into a CLI exit; everything below main() — including
+    build_rootfs() — lets it propagate, so tests can assert on it directly
+    with pytest.raises(ManifestError) instead of the process exiting."""
+
+
+def fail(msg):
+    raise ManifestError(msg)
 
 
 def load_manifest(path):
@@ -21,7 +30,7 @@ def load_manifest(path):
 
 def ensure_abs(path):
     if not path.startswith("/"):
-        die(f"Path must be absolute: {path}")
+        fail(f"Path must be absolute: {path}")
 
 
 def resolve_source(src, sysroot):
@@ -39,7 +48,7 @@ def resolve_source(src, sysroot):
     elif src.startswith("./"):
         return Path(src).resolve()
     else:
-        die(f"Invalid source path: {src}")
+        fail(f"Invalid source path: {src}")
 
 
 def build_symlink_remap(symlinks):
@@ -122,12 +131,75 @@ def copy_tree(src, dst_root, dst_path, remap=None):
                     dirs_exist_ok=True)
 
 
-def run_lddtree(sysroot, binary):
-    # convert absolute sysroot path -> relative path inside sysroot
-    rel = Path(binary).relative_to(sysroot)
-    cmd = ["lddtree", "-l", "--root", str(sysroot), "/" + str(rel)]
-    out = subprocess.check_output(cmd, text=True)
-    return [line.strip() for line in out.splitlines() if line.strip()]
+def get_elf_needed(filepath):
+    """
+    Extract DT_NEEDED library names and the PT_INTERP interpreter path
+    directly from an ELF binary using pyelftools.
+
+    Returns a list of soname strings (e.g. 'libc.so.6') plus, if present,
+    the interpreter's sysroot-absolute path (e.g. '/lib64/ld-linux-x86-64.so.2').
+    Non-ELF or corrupted files are skipped gracefully.
+    """
+    needed = []
+    try:
+        with open(filepath, 'rb') as f:
+            elffile = ELFFile(f)
+            for segment in elffile.iter_segments():
+                if isinstance(segment, InterpSegment):
+                    needed.append(segment.get_interp_name())
+            for section in elffile.iter_sections():
+                if isinstance(section, DynamicSection):
+                    for tag in section.iter_tags():
+                        if tag.entry.d_tag == 'DT_NEEDED':
+                            needed.append(tag.needed)
+    except Exception:
+        pass
+    return needed
+
+
+def resolve_elf_deps(sysroot, binary):
+    """
+    Recursively resolve the shared-library dependency closure of `binary`
+    using pyelftools, replacing the previous `lddtree -l --root sysroot` call.
+
+    Each DT_NEEDED soname is located under the sysroot's standard library
+    directories (via find_lib_in_sysroot) and then walked itself, since a
+    shared library can have its own DT_NEEDED entries (e.g. libcrypto ->
+    libz). PT_INTERP entries are sysroot-absolute paths and are resolved
+    directly against the sysroot rather than searched for.
+
+    Returns a list of absolute host-filesystem path strings, mirroring
+    lddtree -l's output format (including that an entry may be a soname
+    symlink rather than the real file) so that copy_libs can consume it
+    unchanged.
+    """
+    resolved = []
+    visited_paths = set()
+
+    def _walk(elf_path):
+        for name in get_elf_needed(elf_path):
+            if name.startswith("/"):
+                # PT_INTERP entries are already sysroot-absolute paths.
+                lib_path = sysroot / name.lstrip("/")
+                if not lib_path.exists():
+                    fail(f"Missing interpreter: {lib_path}")
+            else:
+                lib_path = find_lib_in_sysroot(sysroot, name)
+
+            # Dedupe by resolved path rather than by name: a library like
+            # glibc's libc.so.6 can reference the same interpreter via both
+            # an embedded PT_INTERP and a bare DT_NEEDED soname, which are
+            # different strings but must not be walked/copied twice.
+            key = str(lib_path)
+            if key in visited_paths:
+                continue
+            visited_paths.add(key)
+
+            resolved.append(key)
+            _walk(lib_path)
+
+    _walk(Path(binary))
+    return resolved
 
 
 def copy_lib_symlinks(sysroot, dst_root, lib_path, remap=None):
@@ -171,7 +243,7 @@ def copy_lib_symlinks(sysroot, dst_root, lib_path, remap=None):
         os.symlink(os.readlink(entry), dst_link)
 
 
-_SYSROOT_LIB_DIRS = ["lib", "usr/lib", "lib64", "usr/lib64"]
+_SYSROOT_LIB_DIRS = ["lib", "usr/lib", "lib64", "usr/lib64", "usr/lib/samba"]
 
 
 def find_lib_in_sysroot(sysroot, soname):
@@ -187,29 +259,29 @@ def find_lib_in_sysroot(sysroot, soname):
         candidate = sysroot / d / soname
         if candidate.exists():
             return candidate
-    die(f"Cannot find library '{soname}' under {sysroot}")
+    fail(f"Cannot find library '{soname}' under {sysroot}")
 
 
 def copy_libs(sysroot, dst_root, binary_src, remap=None):
     """
     Resolve and copy all shared library dependencies of binary_src.
 
-    lddtree is rooted at the flat rootfs sysroot (output/target/ or an
-    equivalent extracted tarball). All library lookups and soname symlink
-    reconstruction are performed against this single directory.
+    Dependency resolution is rooted at the flat rootfs sysroot (output/target/
+    or an equivalent extracted tarball). All library lookups and soname
+    symlink reconstruction are performed against this single directory.
     """
-    libs = run_lddtree(sysroot, binary_src)
+    libs = resolve_elf_deps(sysroot, binary_src)
 
     for lib in libs:
         p = Path(lib)
 
-        # lddtree outputs full sysroot-prefixed paths for executables but may
-        # emit bare sonames (e.g. 'libc.so.6') when processing shared libraries.
-        # Resolve bare names against the sysroot before proceeding.
+        # resolve_elf_deps returns full sysroot-prefixed paths, but guard
+        # against a bare soname (e.g. 'libc.so.6') the same way the old
+        # lddtree-based path did, in case a future caller passes one in.
         if not p.is_absolute():
             p = find_lib_in_sysroot(sysroot, lib)
         elif not p.exists():
-            die(f"Missing library: {p}")
+            fail(f"Missing library: {p}")
 
         # lddtree may return a soname symlink path (e.g. libsodium.so.23)
         # rather than the real file (libsodium.so.23.3.0). Always resolve to
@@ -232,6 +304,119 @@ def copy_libs(sysroot, dst_root, binary_src, remap=None):
         copy_lib_symlinks(sysroot, dst_root, real_p, remap)
 
 
+def materialize_directories(manifest, out_dir):
+    """Create every declared directory[] entry under out_dir."""
+    for d in manifest.get("directories", []):
+        ensure_abs(d)
+        (out_dir / d.lstrip("/")).mkdir(parents=True, exist_ok=True)
+
+
+def materialize_binaries(manifest, sysroot, out_dir, remap=None):
+    """Copy every declared binaries[] entry, plus its resolved shared-library
+    dependency closure, into out_dir."""
+    for entry in manifest.get("binaries", []):
+        src, dst = entry.split(":", 1)
+        src_path = resolve_source(src, sysroot)
+        if not src_path.exists():
+            fail(f"Binary not found: {src_path}")
+        copy_file(src_path, out_dir, dst, remap)
+        copy_libs(sysroot, out_dir, src_path, remap)
+
+
+def materialize_data(manifest, sysroot, out_dir, remap=None):
+    """
+    Copy every declared data[] entry into out_dir.
+
+    Entries may reference either a single file or a directory. Directories
+    are copied recursively, preserving their internal structure, symlinks,
+    and permissions. Directory trees are not scanned for ELF dependencies.
+    """
+    for entry in manifest.get("data", []):
+        if ":" in entry:
+            src, dst = entry.split(":", 1)
+        else:
+            # No destination given: mirror the sysroot path verbatim.
+            # e.g. BUILDROOT/etc/ssl/openssl.cnf -> /etc/ssl/openssl.cnf
+            src = entry
+            for prefix in ("BUILDROOT/", "YOCTO/", "GENERIC/"):
+                if src.startswith(prefix):
+                    dst = "/" + src[len(prefix):]
+                    break
+            else:
+                fail(f"Cannot infer destination for data entry with no prefix: {entry}")
+
+        src_path = resolve_source(src, sysroot)
+        if not src_path.exists():
+            fail(f"Data source not found: {src_path}")
+
+        if src_path.is_dir():
+            copy_tree(src_path, out_dir, dst, remap)
+        else:
+            copy_file(src_path, out_dir, dst, remap)
+
+
+def materialize_symlinks(manifest, out_dir):
+    """
+    Create every declared symlinks[] entry inside out_dir.
+
+    Entry format is <target>:<link_path>, matching ln -s <target> <link>
+    semantics. Both paths are container-absolute in the manifest, and the
+    target is written into the symlink verbatim, still absolute (e.g.
+    target=/usr/bin, link=/bin -> /bin is a symlink to the literal string
+    "/usr/bin", not a relative "usr/bin").
+
+    This resolves correctly once the rootfs is running as a container, since
+    the container has its own root and "/usr/bin" means the container's
+    /usr/bin. It does NOT resolve correctly against the staging directory
+    on the host: any host-side tooling that follows the symlink while
+    out_dir is just a directory on disk (packaging scripts, tar, manual
+    inspection) will jump to the host's real /usr/bin instead of
+    out_dir/usr/bin.
+    """
+    for entry in manifest.get("symlinks", []):
+        target, link = entry.split(":", 1)
+        ensure_abs(link)
+        ensure_abs(target)
+        link_path = out_dir / link.lstrip("/")
+        link_path.parent.mkdir(parents=True, exist_ok=True)
+        if link_path.exists() or link_path.is_symlink():
+            link_path.unlink()
+        os.symlink(target, link_path)
+
+
+def build_rootfs(manifest, sysroot, out_dir):
+    """
+    Assemble a complete staging rootfs at out_dir from manifest, rooted
+    against sysroot.
+
+    Wipes and recreates out_dir, then materializes directories, binaries
+    (+ their resolved library closures), data entries, and symlinks, in
+    that order. This is the full pipeline main() used to run inline; it
+    takes no CLI or environment state, so it can be called directly from
+    tests with an in-memory manifest dict and a tmp_path sysroot/out_dir.
+    """
+    if not sysroot.exists():
+        fail(f"Sysroot does not exist: {sysroot}")
+
+    # Build a path-remap table from the declared symlinks so that file copies
+    # can redirect destinations before any symlink is created on disk.
+    # e.g. /usr/lib -> /lib means libraries are written to /lib/ directly,
+    # leaving /usr/lib free to be created as a symlink later.
+    remap = build_symlink_remap(manifest.get("symlinks", []))
+
+    # Clean output
+    if out_dir.exists():
+        shutil.rmtree(out_dir)
+    out_dir.mkdir(parents=True)
+
+    materialize_directories(manifest, out_dir)
+    materialize_binaries(manifest, sysroot, out_dir, remap)
+    materialize_data(manifest, sysroot, out_dir, remap)
+    materialize_symlinks(manifest, out_dir)
+
+    print(f"Rootfs built at: {out_dir}")
+
+
 def main():
     if len(sys.argv) != 3:
         print("Usage: assemble.py <manifest.yaml> <output_dir>")
@@ -250,83 +435,15 @@ def main():
     else:
         sysroot = Path(manifest["input"]["path"]).resolve()
 
-    if not sysroot.exists():
-        die(f"Sysroot does not exist: {sysroot}")
-
-    # Build a path-remap table from the declared symlinks so that file copies
-    # can redirect destinations before any symlink is created on disk.
-    # e.g. /usr/lib -> /lib means libraries are written to /lib/ directly,
-    # leaving /usr/lib free to be created as a symlink later.
-    remap = build_symlink_remap(manifest.get("symlinks", []))
-
-    # Clean output
-    if out_dir.exists():
-        shutil.rmtree(out_dir)
-    out_dir.mkdir(parents=True)
-
-    # 1. directories
-    for d in manifest.get("directories", []):
-        ensure_abs(d)
-        (out_dir / d.lstrip("/")).mkdir(parents=True, exist_ok=True)
-
-    # 2. binaries + libs
-    for entry in manifest.get("binaries", []):
-        src, dst = entry.split(":", 1)
-        src_path = resolve_source(src, sysroot)
-        if not src_path.exists():
-            die(f"Binary not found: {src_path}")
-        copy_file(src_path, out_dir, dst, remap)
-        copy_libs(sysroot, out_dir, src_path, remap)
-
-    # 3. data
-    # Entries may reference either a single file or a directory. Directories
-    # are copied recursively, preserving their internal structure, symlinks,
-    # and permissions. Directory trees are not scanned for ELF dependencies.
-    for entry in manifest.get("data", []):
-        if ":" in entry:
-            src, dst = entry.split(":", 1)
-        else:
-            # No destination given: mirror the sysroot path verbatim.
-            # e.g. BUILDROOT/etc/ssl/openssl.cnf -> /etc/ssl/openssl.cnf
-            src = entry
-            for prefix in ("BUILDROOT/", "YOCTO/", "GENERIC/"):
-                if src.startswith(prefix):
-                    dst = "/" + src[len(prefix):]
-                    break
-            else:
-                die(f"Cannot infer destination for data entry with no prefix: {entry}")
-
-        src_path = resolve_source(src, sysroot)
-        if not src_path.exists():
-            die(f"Data source not found: {src_path}")
-
-        if src_path.is_dir():
-            copy_tree(src_path, out_dir, dst, remap)
-        else:
-            copy_file(src_path, out_dir, dst, remap)
-
-    # 4. symlinks
-    # Entry format is <target>:<link_path>, matching ln -s <target> <link> semantics.
-    # Both paths are container-absolute in the manifest. We convert the target
-    # to a relative path at materialization time so the symlink is self-contained
-    # within the staging rootfs and does not escape to the host filesystem.
-    #
-    # Example: target=/usr/bin, link=/bin
-    #   link directory = /  ->  relative target = usr/bin  (not /usr/bin)
-    #
-    # Example: target=/lib, link=/usr/lib
-    #   link directory = /usr  ->  relative target = ../lib
-    for entry in manifest.get("symlinks", []):
-        target, link = entry.split(":", 1)
-        ensure_abs(link)
-        ensure_abs(target)
-        link_path = out_dir / link.lstrip("/")
-        link_path.parent.mkdir(parents=True, exist_ok=True)
-        if link_path.exists() or link_path.is_symlink():
-            link_path.unlink()
-        os.symlink(target, link_path)
-
-    print(f"Rootfs built at: {out_dir}")
+    # build_rootfs() and everything it calls raise ManifestError on any fatal
+    # problem rather than exiting directly. main() is the only place that
+    # catches it, so build_rootfs() stays exception-clean for callers (tests)
+    # that want to assert on the failure instead of losing the process.
+    try:
+        build_rootfs(manifest, sysroot, out_dir)
+    except ManifestError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
