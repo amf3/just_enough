@@ -64,23 +64,23 @@ part of this project.  (If you would like to customize the busybox container ins
 load the busybox_defconfig.)
 
 ```
-$ make O=$PWD -C ./buildroot list-defconfigs
-$ make O=$PWD -C ./buildroot container_busybox_defconfig
+$ make O=$PWD/build -C ./buildroot list-defconfigs
+$ make O=$PWD/build -C ./buildroot container_busybox_defconfig
 ```
 
 Customize and save container changes with menuconfig.  Look for the packages menu inside menuconfig for 
 adding or removing packages.
 
 ```
-$ make O=$PWD -C ./buildroot menuconfig
-$ make O=$PWD -C ./buildroot savedefconfig
+$ make O=$PWD/build -C ./buildroot menuconfig
+$ make O=$PWD/build -C ./buildroot savedefconfig
 ```
 
 Build the container with "all" and list dependencies with "external-deps".
 
 ```
-$ time make O=$PWD -C ./buildroot source all
-$ time make O=$PWD -C ./buildroot external-deps
+$ time make O=$PWD/build -C ./buildroot source all
+$ time make O=$PWD/build -C ./buildroot external-deps
 ```
 
 Root file system will be found in the images directory which is turned into a container with "docker import".
