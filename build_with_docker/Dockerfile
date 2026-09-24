@@ -29,5 +29,9 @@ RUN apt update && \
 # Work around for https://github.com/uutils/coreutils/issues/12166
 RUN update-alternatives --install /usr/bin/install install /usr/bin/gnuinstall 100
 
+# Pre-create the single volume target
+RUN mkdir -p ${APP_DIR}/build && \
+    chown -R ${UID}:${GID} ${APP_DIR}
+
 USER ${UID}
 WORKDIR ${APP_DIR}
