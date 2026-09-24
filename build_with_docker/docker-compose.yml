@@ -1,4 +1,3 @@
-
 services:
   builder:
     environment:
@@ -13,5 +12,9 @@ services:
         GID: "${MY_GID:-1000}"
     volumes:
       - ..:/app
+      - buildroot_build:/app/build
     working_dir: /app
     command: bash -c "echo 'Run `make shell`'"
+
+volumes:
+  buildroot_build:
