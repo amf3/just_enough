@@ -22,7 +22,7 @@ COPY --chown=101:101 --from=bb_shell /etc/ssl/certs/ca-certificates.crt /etc/ssl
 
 RUN --mount=type=bind,from=bb_shell,source=/usr/bin/ash,target=/usr/bin/ash \
     --mount=type=bind,from=bb_shell,source=/usr/bin/busybox,target=/usr/bin/busybox \
-    ["/usr/bin/ash", "-c", "/usr/bin/unbound-anchor -a /etc/unbound/get-dnssec-root.key || true"]
+    ["/usr/bin/ash", "-c", "/usr/sbin/unbound-anchor -a /etc/unbound/get-dnssec-root.key || true"]
 
 RUN --mount=type=bind,from=bb_shell,source=/usr/bin/busybox,target=/usr/bin/busybox \
     ["/usr/bin/busybox", "wget", "-O", "/etc/unbound/root.hints", "https://www.internic.net/domain/named.cache"]

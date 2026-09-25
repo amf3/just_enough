@@ -24,6 +24,7 @@ directories:
   - /etc/unbound
   - /var/cache/unbound
   - /var/run
+  - /usr/bin
 
 symlinks: 
   - /usr/bin:/bin

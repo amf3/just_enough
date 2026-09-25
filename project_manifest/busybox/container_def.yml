@@ -18,7 +18,8 @@ directories:
   - /var/run
   - /root
   - /etc/ssl/certs
+  - /usr/sbin
 
 symlinks: 
   - /usr/bin:/bin
-  - /bin:/sbin
+  - /usr/sbin:/sbin

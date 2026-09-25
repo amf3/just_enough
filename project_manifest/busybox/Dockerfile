@@ -16,7 +16,9 @@ LABEL org.opencontainers.image.description="A BusyBox appliance built via Buildr
 
 # Use the variable in the COPY command
 COPY --chown=65534:65534 ${STAGING_DIR}/ /
+SHELL ["/bin/busybox", "sh", "-c"]
 USER 65534:65534
+RUN /bin/busybox --install -s /bin
 
 CMD ["/usr/bin/ash"]
 
