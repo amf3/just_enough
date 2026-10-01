@@ -1,0 +1,60 @@
+services:
+  samba:
+    build:
+      context: .
+      dockerfile_inline: |
+        # It's recommended to change :latest to an actual container image hash
+        FROM ghcr.io/amf3/just_enough/busybox:latest AS bb_shell
+        FROM mysamba:latest
+        #FROM ghcr.io/amf3/just_enough/samba4:latest
+
+        # 1. Seed POSIX identities
+        RUN --mount=type=bind,from=bb_shell,source=/usr/bin/busybox,target=/usr/bin/busybox \
+            --mount=type=secret,id=samba_secrets,target=/run/secrets/samba_secrets \
+            /usr/bin/busybox awk -F ':' '!/^#/ && NF { \
+              print $2 ":x:" $1 ":" $1 ":" $2 ":/dev/null:/bin/false" >> "/etc/passwd"; \
+              print $2 ":x:" $1 ":" >> "/etc/group" \
+            }' /run/secrets/samba_secrets
+
+        # 2. Seed optional shared groups
+        RUN --mount=type=bind,from=bb_shell,source=/usr/bin/busybox,target=/usr/bin/busybox \
+            --mount=type=secret,id=samba_groups,target=/run/secrets/samba_groups,required=false \
+            /usr/bin/busybox awk -F ':' '!/^#/ && NF { \
+              print $1 ":x:" $2 ":" $3 >> "/etc/group" \
+            }' /run/secrets/samba_groups 2>/dev/null || true
+
+        # 3. Seed passdb.tdb
+        RUN --mount=type=bind,from=bb_shell,source=/usr/bin/busybox,target=/usr/bin/busybox \
+            --mount=type=secret,id=samba_secrets,target=/run/secrets/samba_secrets \
+            /usr/bin/busybox awk -F ':' '!/^#/ && NF { \
+              print "(echo \"" $3 "\"; echo \"" $3 "\") | /usr/bin/smbpasswd -a -s " $2 \
+            }' /run/secrets/samba_secrets | /usr/bin/busybox sh
+        
+        # Update the healthcheck credentials as needed by uncommenting this entry and changing the AMIOK password.
+        # HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+        #    CMD ["/usr/bin/smbclient", "-L", "//127.0.0.1", "-N", "-U", "healthcheck%AMIOK", "-c", "exit"]
+
+      secrets:
+        - samba_secrets
+        - samba_groups
+    # Update local tag name as needed
+    image: samba-appliance:local
+    container_name: samba
+    restart: unless-stopped
+    ports:
+      - "445:445"
+    volumes:
+      - ./smb.conf:/etc/samba/smb.conf:ro
+      - timemachine_bob:/srv/timemachine/bob
+      - mydata:/srv/mydata
+
+# Update volumes as needed
+volumes:
+  timemachine_bob:
+  mydata:
+
+secrets:
+  samba_secrets:
+    file: ./samba_secrets
+  samba_groups:
+    file: ./samba_groups

@@ -8,11 +8,13 @@ binaries:
   - BUILDROOT/usr/bin/smbd:/usr/bin/smbd
   - BUILDROOT/usr/bin/smbpasswd:/usr/bin/smbpasswd
   - BUILDROOT/usr/bin/smbclient:/usr/bin/smbclient
+  - BUILDROOT/usr/libexec/samba/samba-dcerpcd:/usr/libexec/samba/samba-dcerpcd
+  - BUILDROOT/usr/libexec/samba/rpcd_winreg:/usr/libexec/samba/rpcd_winreg
+  - BUILDROOT/usr/libexec/samba/rpcd_classic:/usr/libexec/samba/rpcd_classic
 
 data:
   - ./project_manifest/samba4/passwd:/etc/passwd
   - ./project_manifest/samba4/group:/etc/group
-  - ./project_manifest/samba4/smb.conf:/etc/samba/smb.conf
   - BUILDROOT/usr/lib/samba/vfs:/usr/lib/samba/vfs
   - BUILDROOT/usr/lib/samba/idmap:/usr/lib/samba/idmap
   - BUILDROOT/usr/lib/samba/krb5:/usr/lib/samba/krb5
@@ -27,7 +29,8 @@ directories:
   - /etc
   - /tmp
   - /srv/timemachine
-  - /var/log/samba/cores
+  - /srv/mydata
+  - /var/log/samba
   - /var/lib/samba/private
   - /var/run/samba
   - /var/cache/samba

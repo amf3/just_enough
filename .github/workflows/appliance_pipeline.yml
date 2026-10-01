@@ -30,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        appliance: [unbound_dns, busybox, python3.14]
+        appliance: [unbound_dns, busybox, python3.14, samba4]
         platform: [linux/amd64, linux/arm64]
         include:
           - platform: linux/amd64
