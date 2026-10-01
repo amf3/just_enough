@@ -1,0 +1,5 @@
+# Example shared group definitons. 
+# Format is "group_name:gid:members".
+# 
+# data_share_group:2000:bob,alice
+# family:2001:bob,alice,charlie
