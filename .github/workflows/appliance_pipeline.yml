@@ -151,6 +151,8 @@ jobs:
           build-args: |
             STAGING_DIR=staging
             BR_TAG=${{ env.BR_TAG }}
+          secrets: |
+            samba_secrets=${{ matrix.appliance == 'samba4' && secrets.SAMBA_SECRETS || '' }}
           # Arch-specific tag only. Each matrix leg is a separate single-arch
           # build, so both legs must NOT push to the same final tag or one
           # push just overwrites the other (this was the amd64/arm64 mix-up).
@@ -171,7 +173,7 @@ jobs:
 
     strategy:
       matrix:
-        appliance: [unbound_dns, busybox, python3.14]
+        appliance: [unbound_dns, busybox, python3.14, samba4]
 
     env:
       BR_TAG: ${{ github.event.inputs.buildroot_tag || '2026.05.1' }}
