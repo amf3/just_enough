@@ -20,7 +20,7 @@ LABEL org.opencontainers.image.description="A minimal Samba4 appliance built via
 COPY ${STAGING_DIR}/ /
 
 # Copy default/baseline samba config
-COPY ./project_manifest/samba4/smb.conf /etc/samba/smb.conf
+COPY smb.conf /etc/samba/smb.conf
 
 # Fix runtime directory permissions
 RUN --mount=type=bind,from=bb_shell,source=/usr/bin/busybox,target=/usr/bin/busybox \
