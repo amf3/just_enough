@@ -139,7 +139,8 @@ jobs:
           version: latest
 
       - name: Build and Push Appliance Container
-        id: build_push  
+        if: matrix.appliance != 'samba4'
+        id: build_push
         uses: docker/build-push-action@v7
         with:
           context: project_manifest/${{ matrix.appliance }}
@@ -151,10 +152,6 @@ jobs:
           build-args: |
             STAGING_DIR=staging
             BR_TAG=${{ env.BR_TAG }}
-          # Arch-specific tag only. Each matrix leg is a separate single-arch
-          # build, so both legs must NOT push to the same final tag or one
-          # push just overwrites the other (this was the amd64/arm64 mix-up).
-          # merge-appliance below fuses these into the real multi-arch tags.
           tags: |
             ghcr.io/${{ github.repository }}/${{ matrix.appliance }}:${{ env.BR_TAG }}-${{ matrix.arch }}
           annotations: |
@@ -164,6 +161,32 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Build and Push Samba4 Appliance Container
+        if: matrix.appliance == 'samba4'
+        id: build_push_samba
+        uses: docker/build-push-action@v7
+        with:
+            context: project_manifest/samba4
+            file: project_manifest/samba4/Dockerfile
+            platforms: ${{ matrix.platform }}
+            push: true
+            provenance: mode=max
+            sbom: true
+            build-args: |
+              STAGING_DIR=staging
+              BR_TAG=${{ env.BR_TAG }}
+            secrets: |
+              samba_groups=./project_manifest/samba4/samba_groups
+              samba_secrets=./project_manifest/samba4/samba_secrets
+            tags: |
+              ghcr.io/${{ github.repository }}/samba4:${{ env.BR_TAG }}-${{ matrix.arch }}
+            annotations: |
+              org.opencontainers.image.source=https://github.com/${{ github.repository }}
+              org.opencontainers.image.description=A minimal JustEnough samba4 appliance
+              org.opencontainers.image.licenses=Apache-2.0
+            cache-from: type=gha
+            cache-to: type=gha,mode=max
+
   merge-appliance:
     name: Merge ${{ matrix.appliance }} Multi-Arch Manifest
     needs: build-appliance
@@ -171,7 +194,7 @@ jobs:
 
     strategy:
       matrix:
-        appliance: [unbound_dns, busybox, python3.14]
+        appliance: [unbound_dns, busybox, python3.14, samba4]
 
     env:
       BR_TAG: ${{ github.event.inputs.buildroot_tag || '2026.05.1' }}
