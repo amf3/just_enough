@@ -5,8 +5,7 @@ services:
       dockerfile_inline: |
         # It's recommended to change :latest to an actual container image hash
         FROM ghcr.io/amf3/just_enough/busybox:latest AS bb_shell
-        FROM mysamba:latest
-        #FROM ghcr.io/amf3/just_enough/samba4:latest
+        FROM ghcr.io/amf3/just_enough/samba4:latest
 
         # 1. Seed POSIX identities
         RUN --mount=type=bind,from=bb_shell,source=/usr/bin/busybox,target=/usr/bin/busybox \
