@@ -98,7 +98,7 @@ def copy_file(src, dst_root, dst_path, remap=None):
         dst_path = remap_dest(dst_path, remap)
     dst = dst_root / dst_path.lstrip("/")
     dst.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(src, dst)
+    shutil.copy2(src, dst, follow_symlinks=False)
 
 
 def copy_tree(src, dst_root, dst_path, remap=None):
