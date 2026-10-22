@@ -34,3 +34,6 @@ symlinks:
   - /usr/sbin:/sbin
   - /usr/lib:/lib
   - /lib:/lib64
+  - /usr/bin/pip3:/usr/bin/pip
+  - /usr/bin/python3.14:/usr/bin/python3
+  - /usr/bin/python3.14:/usr/bin/python
