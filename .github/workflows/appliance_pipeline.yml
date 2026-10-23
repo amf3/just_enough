@@ -158,8 +158,8 @@ jobs:
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.description=A minimal JustEnough ${{ matrix.appliance }} appliance
             org.opencontainers.image.licenses=Apache-2.0
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ matrix.appliance }}-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.appliance }}-${{ matrix.arch }}
 
       - name: Build and Push Samba4 Appliance Container
         if: matrix.appliance == 'samba4'
@@ -176,16 +176,16 @@ jobs:
               STAGING_DIR=staging
               BR_TAG=${{ env.BR_TAG }}
             secrets: |
-              samba_groups=./project_manifest/samba4/samba_groups
-              samba_secrets=./project_manifest/samba4/samba_secrets
+              samba_groups=samba_groups
+              samba_secrets=samba_secrets
             tags: |
               ghcr.io/${{ github.repository }}/samba4:${{ env.BR_TAG }}-${{ matrix.arch }}
             annotations: |
               org.opencontainers.image.source=https://github.com/${{ github.repository }}
               org.opencontainers.image.description=A minimal JustEnough samba4 appliance
               org.opencontainers.image.licenses=Apache-2.0
-            cache-from: type=gha
-            cache-to: type=gha,mode=max
+            cache-from: type=gha,scope=${{ matrix.appliance }}-${{ matrix.arch }}
+            cache-to: type=gha,mode=max,scope=${{ matrix.appliance }}-${{ matrix.arch }}
 
   merge-appliance:
     name: Merge ${{ matrix.appliance }} Multi-Arch Manifest
