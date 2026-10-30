@@ -51,7 +51,7 @@ RUN --mount=type=bind,from=bb_shell,source=/usr/bin/busybox,target=/usr/bin/busy
 RUN --mount=type=bind,from=bb_shell,source=/usr/bin/busybox,target=/usr/bin/busybox \
     --mount=type=secret,id=samba_secrets,target=/run/secrets/samba_secrets \
     /usr/bin/busybox awk -F ':' \
-    '!/^#/ && NF { print "(echo \"" $3 "\"; echo \"" $3 "\") | /usr/bin/smbpasswd -a -s " $2 }' \
+    '!/^#/ && NF >= 3 && $1 ~ /^[0-9]+$/ { print "(echo \"" $3 "\"; echo \"" $3 "\") | /usr/bin/smbpasswd -a -s " $2 }' \
     /run/secrets/samba_secrets | /usr/bin/busybox sh
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
