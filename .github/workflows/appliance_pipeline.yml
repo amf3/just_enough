@@ -175,9 +175,9 @@ jobs:
             build-args: |
               STAGING_DIR=staging
               BR_TAG=${{ env.BR_TAG }}
-            secrets: |
-              samba_groups=samba_groups
-              samba_secrets=samba_secrets
+            secret-files: |
+              samba_groups=project_manifest/samba4/samba_groups
+              samba_secrets=project_manifest/samba4/samba_secrets
             tags: |
               ghcr.io/${{ github.repository }}/samba4:${{ env.BR_TAG }}-${{ matrix.arch }}
             annotations: |
