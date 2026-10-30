@@ -35,7 +35,7 @@ SHELL ["/usr/bin/busybox", "sh", "-c"]
 # Populate /etc/passwd and primary /etc/group from samba_secrets
 RUN --mount=type=bind,from=bb_shell,source=/usr/bin/busybox,target=/usr/bin/busybox \
     --mount=type=secret,id=samba_secrets,target=/run/secrets/samba_secrets \
-    /usr/bin/busybox awk -F ':' '!/^#/ && NF { \
+    /usr/bin/busybox awk -F ':' '!/^#/ && NF >= 3 && $1 ~ /^[0-9]+$/ { \
       print $2 ":x:" $1 ":" $1 ":" $2 ":/dev/null:/bin/false" >> "/etc/passwd"; \
       print $2 ":x:" $1 ":" >> "/etc/group" \
     }' /run/secrets/samba_secrets
@@ -43,7 +43,7 @@ RUN --mount=type=bind,from=bb_shell,source=/usr/bin/busybox,target=/usr/bin/busy
 # Populate shared groups in /etc/group from samba_groups (if file is supplied)
 RUN --mount=type=bind,from=bb_shell,source=/usr/bin/busybox,target=/usr/bin/busybox \
     --mount=type=secret,id=samba_groups,target=/run/secrets/samba_groups,required=false \
-    /usr/bin/busybox awk -F ':' '!/^#/ && NF { \
+    /usr/bin/busybox awk -F ':' '!/^#/ && NF >= 2 && $1 ~ /^[0-9]+$/ { \
       print $1 ":x:" $2 ":" $3 >> "/etc/group" \
     }' /run/secrets/samba_groups 2>/dev/null || true
 
