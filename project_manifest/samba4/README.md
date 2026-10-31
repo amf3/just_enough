@@ -30,7 +30,7 @@ If there are any shared groups, add the list of users to samba_secrets.  The for
 
 ### docker-compose.yml and smb.conf changes
 
-Next uncomment the HEALTHCHECK line in the docker-compose.yml file and update the healthcheck password if it's been modified.  One should also modify the VOLUMEs inside docker-compose. 
+Next update the HEALTHCHECK line in the docker-compose.yml file and update the healthcheck password if it's been modified.  One should also modify the VOLUMEs inside docker-compose. 
 
 Update smb.conf and uncomment the data share and timemachine share blocks so smbd will present a network share.
 

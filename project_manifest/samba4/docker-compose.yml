@@ -1,4 +1,13 @@
 services:
+  volume-init:
+    # Use: "docker compose --profile init run --rm volume-init" to fix volume permissions
+    image: ghcr.io/amf3/just_enough/busybox:latest
+    profiles: ["init"]
+    user: root
+    command: sh -c "chown 1001:1001 /v/bob && chmod 0700 /v/bob"
+    volumes:
+      - timemachine_bob:/v/bob
+
   samba:
     build:
       context: .
@@ -10,7 +19,7 @@ services:
         # 1. Seed POSIX identities
         RUN --mount=type=bind,from=bb_shell,source=/usr/bin/busybox,target=/usr/bin/busybox \
             --mount=type=secret,id=samba_secrets,target=/run/secrets/samba_secrets \
-            /usr/bin/busybox awk -F ':' '!/^#/ && NF { \
+            /usr/bin/busybox awk -F ':' '!/^#/ && NF >= 3 && $1 ~ /^[0-9]+$/ { \
               print $2 ":x:" $1 ":" $1 ":" $2 ":/dev/null:/bin/false" >> "/etc/passwd"; \
               print $2 ":x:" $1 ":" >> "/etc/group" \
             }' /run/secrets/samba_secrets
@@ -18,20 +27,16 @@ services:
         # 2. Seed optional shared groups
         RUN --mount=type=bind,from=bb_shell,source=/usr/bin/busybox,target=/usr/bin/busybox \
             --mount=type=secret,id=samba_groups,target=/run/secrets/samba_groups,required=false \
-            /usr/bin/busybox awk -F ':' '!/^#/ && NF { \
+            /usr/bin/busybox awk -F ':' '!/^#/ && NF >= 2 && $1 ~ /^[0-9]+$/  { \
               print $1 ":x:" $2 ":" $3 >> "/etc/group" \
             }' /run/secrets/samba_groups 2>/dev/null || true
 
         # 3. Seed passdb.tdb
         RUN --mount=type=bind,from=bb_shell,source=/usr/bin/busybox,target=/usr/bin/busybox \
             --mount=type=secret,id=samba_secrets,target=/run/secrets/samba_secrets \
-            /usr/bin/busybox awk -F ':' '!/^#/ && NF { \
+            /usr/bin/busybox awk -F ':' '!/^#/ && NF >= 3 && $1 ~ /^[0-9]+$/  { \
               print "(echo \"" $3 "\"; echo \"" $3 "\") | /usr/bin/smbpasswd -a -s " $2 \
             }' /run/secrets/samba_secrets | /usr/bin/busybox sh
-        
-        # Update the healthcheck credentials as needed by uncommenting this entry and changing the AMIOK password.
-        # HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-        #    CMD ["/usr/bin/smbclient", "-L", "//127.0.0.1", "-N", "-U", "healthcheck%AMIOK", "-c", "exit"]
 
       secrets:
         - samba_secrets
@@ -40,6 +45,15 @@ services:
     image: samba-appliance:local
     container_name: samba
     restart: unless-stopped
+    
+    # Update the healthcheck credentials as needed by uncommenting this entry and changing the AMIOK password.  
+    healthcheck:
+      test: ["CMD", "/usr/bin/smbclient", "-L", "//127.0.0.1", "-N", "-U", "healthcheck%AMIOK", "-c", "exit"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
     ports:
       - "445:445"
     volumes:
