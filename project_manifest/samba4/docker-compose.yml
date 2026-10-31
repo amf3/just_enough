@@ -1,4 +1,13 @@
 services:
+  volume-init:
+    # Use: "docker compose --profile init run --rm volume-init" to fix volume permissions
+    image: ghcr.io/amf3/just_enough/busybox:latest
+    profiles: ["init"]
+    user: root
+    command: sh -c "chown 1001:1001 /v/bob && chmod 0700 /v/bob"
+    volumes:
+      - timemachine_bob:/v/bob
+
   samba:
     build:
       context: .
@@ -39,7 +48,7 @@ services:
     
     # Update the healthcheck credentials as needed by uncommenting this entry and changing the AMIOK password.  
     healthcheck:
-      test: ["/usr/bin/smbclient", "-L", "//127.0.0.1", "-N", "-U", "healthcheck%AMIOK", "-c", "exit"]
+      test: ["CMD", "/usr/bin/smbclient", "-L", "//127.0.0.1", "-N", "-U", "healthcheck%AMIOK", "-c", "exit"]
       interval: 30s
       timeout: 5s
       retries: 3
