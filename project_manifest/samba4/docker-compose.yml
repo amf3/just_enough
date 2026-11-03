@@ -1,13 +1,4 @@
 services:
-  volume-init:
-    # Use: "docker compose --profile init run --rm volume-init" to fix volume permissions
-    image: ghcr.io/amf3/just_enough/busybox:latest
-    profiles: ["init"]
-    user: root
-    command: sh -c "chown 1001:1001 /v/bob && chmod 0700 /v/bob"
-    volumes:
-      - timemachine_bob:/v/bob
-
   samba:
     build:
       context: .
@@ -56,6 +47,16 @@ services:
 
     ports:
       - "445:445"
+
+    pre_start:
+      - image: ghcr.io/amf3/just_enough/busybox:latest
+        user: root
+        command: ["sh", "-c", "chmod 0700 /srv/timemachine/bob && chown 1001:1001 /srv/timemachine/bob"]
+
+      - image: ghcr.io/amf3/just_enough/busybox:latest
+        user: root
+        command: ["sh", "-c", "chmod 770 /srv/mydata && chown 0:2001 /srv/mydata"]
+
     volumes:
       - ./smb.conf:/etc/samba/smb.conf:ro
       - timemachine_bob:/srv/timemachine/bob
