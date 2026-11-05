@@ -7,6 +7,7 @@ services:
         FROM ghcr.io/amf3/just_enough/busybox:latest AS bb_shell
         FROM ghcr.io/amf3/just_enough/samba4:latest
 
+
         # 1. Seed POSIX identities
         RUN --mount=type=bind,from=bb_shell,source=/usr/bin/busybox,target=/usr/bin/busybox \
             --mount=type=secret,id=samba_secrets,target=/run/secrets/samba_secrets \
@@ -18,9 +19,9 @@ services:
         # 2. Seed optional shared groups
         RUN --mount=type=bind,from=bb_shell,source=/usr/bin/busybox,target=/usr/bin/busybox \
             --mount=type=secret,id=samba_groups,target=/run/secrets/samba_groups,required=false \
-            /usr/bin/busybox awk -F ':' '!/^#/ && NF >= 2 && $1 ~ /^[0-9]+$/  { \
+            /usr/bin/busybox awk -F ':' '!/^#/ && NF >= 2 && $2 ~ /^[0-9]+$/  { \
               print $1 ":x:" $2 ":" $3 >> "/etc/group" \
-            }' /run/secrets/samba_groups 2>/dev/null || true
+            }' /run/secrets/samba_groups 
 
         # 3. Seed passdb.tdb
         RUN --mount=type=bind,from=bb_shell,source=/usr/bin/busybox,target=/usr/bin/busybox \
@@ -46,7 +47,7 @@ services:
       start_period: 20s
 
     ports:
-      - "445:445"
+      - "127.0.0.1:445:445"
 
     pre_start:
       - image: ghcr.io/amf3/just_enough/busybox:latest
@@ -55,6 +56,7 @@ services:
 
       - image: ghcr.io/amf3/just_enough/busybox:latest
         user: root
+        command: ["sh", "-c", "chmod 770 /srv/shared_data && chown 0:2000 /srv/shared_data"]
         command: ["sh", "-c", "chmod 770 /srv/mydata && chown 0:2001 /srv/mydata"]
 
     volumes:
