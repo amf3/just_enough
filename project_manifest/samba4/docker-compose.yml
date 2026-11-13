@@ -56,7 +56,6 @@ services:
 
       - image: ghcr.io/amf3/just_enough/busybox:latest
         user: root
-        command: ["sh", "-c", "chmod 770 /srv/shared_data && chown 0:2000 /srv/shared_data"]
         command: ["sh", "-c", "chmod 770 /srv/mydata && chown 0:2001 /srv/mydata"]
 
     volumes:
