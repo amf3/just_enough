@@ -59,7 +59,7 @@ services:
         command: ["sh", "-c", "chmod 770 /srv/mydata && chown 0:2001 /srv/mydata"]
 
     volumes:
-      - ./smb.conf:/etc/samba/smb.conf:ro
+      - smb.conf:/etc/samba/smb.conf:ro
       - timemachine_bob:/srv/timemachine/bob
       - mydata:/srv/mydata
 
